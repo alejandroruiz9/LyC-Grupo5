@@ -36,7 +36,7 @@ public class Manejador_Tabla_Simbolos {
         }
     }
 
-     public ArrayList<Simbolo> gettablaSimbolos() {
+    public ArrayList<Simbolo> getTablaSimbolos() {
         return tablaSimbolos;
     }
 
@@ -48,6 +48,13 @@ public class Manejador_Tabla_Simbolos {
         }
         return false;
     }
-
+    public Simbolo getSymbol(String nombreSimbolo) {
+        for (Simbolo symbol : tablaSimbolos) {
+            if (symbol.getNombre().equals(nombreSimbolo)) {
+                return symbol;
+            }
+        }
+        return null;
+    }
 
 }

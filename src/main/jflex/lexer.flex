@@ -38,6 +38,8 @@ Sub = "-"
 Div = "/"
 Assig = ":="
 if = "if"
+si = "si"
+sino = "sino"
 elseif = "elseif"
 else = "else"
 and = "AND"
@@ -53,6 +55,17 @@ GreaterEqual = ">="
 LessEqual = "<="
 Equals = "=="
 NotEquals = "!="
+Float = "Float"
+Int = "Int"
+String = "String"
+Comentarios = "*-" ~ "-*"
+write = "escribir"
+read = "leer"
+while = "while"
+init="init"
+colon=":"
+comma=","
+
 
 Letter = [a-zA-Z]
 Digit = [0-9]
@@ -70,12 +83,8 @@ IntegerConstant = {Digit}+
 /* keywords */
 
 <YYINITIAL> {
-
-  /* Constants */
-  {IntegerConstant}                        { return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
-  {StringConstant}                         { return symbol(ParserSym.STRING_CONSTANT, yytext()); }
-  {FloatConstant}                          { return symbol(ParserSym.FLOAT_CONSTANT, yytext()); }
-
+  /* Comentarios */
+  {Comentarios}                          { /* ignore */ }
   /* operators */
   {Plus}                                   { return symbol(ParserSym.PLUS); }
   {Sub}                                    { return symbol(ParserSym.SUB); }
@@ -90,13 +99,57 @@ IntegerConstant = {Digit}+
   {NotEquals}                              { return symbol(ParserSym.NOTEQUALS); }
 
   /* keywords */
+  {init}                                    { return symbol(ParserSym.INIT); }
+  {comma}                                    { return symbol(ParserSym.COMMA); }
+  {colon}                                    { return symbol(ParserSym.COLON); }
   {if}                                     { return symbol(ParserSym.IF); }
+  {si}                                     { return symbol(ParserSym.IF); }
   {elseif}                                 { return symbol(ParserSym.ELSEIF); }
+  {sino}                                 { return symbol(ParserSym.ELSE); }
   {else}                                   { return symbol(ParserSym.ELSE); }
   {and}                                    { return symbol(ParserSym.AND); }
   {or}                                     { return symbol(ParserSym.OR); }
   {not}                                    { return symbol(ParserSym.NOT); }
+  {write}                                     { return symbol(ParserSym.WRITE); }
+  {read}                                    { return symbol(ParserSym.READ); }
+  {while}                                    { return symbol(ParserSym.WHILE); }
+  {Float}                                   { return symbol(ParserSym.FLOAT); }
+  {Int}                                     { return symbol(ParserSym.INT); }
+  {String}                                  { return symbol(ParserSym.STRING); }
   
+
+
+  /* Constants */
+  {FloatConstant}                         {
+    if (Float.parseFloat(yytext()) >= MIN_FLOAT && Float.parseFloat(yytext()) <= MAX_FLOAT) {
+        return symbol(ParserSym.FLOAT_CONSTANT, yytext());
+    } else {
+        throw new NumberFormatException("Variable de tipo Float fuera de rango");
+    }
+  }
+  {IntegerConstant}       
+  {
+    // Verificamos si el int está dentro del rango
+    if (Integer.parseInt(yytext()) >= MIN_INT && Integer.parseInt(yytext()) <= MAX_INT) {
+        return symbol(ParserSym.INTEGER_CONSTANT, yytext());
+    } else {
+        throw new InvalidIntegerException("Variable de tipo Int fuera de rango");
+    }
+  }
+  {StringConstant}                         { 
+
+
+    String textoSinComillas = yytext().substring(1, yytext().length() - 1);
+
+    // Verificamos que el string no supere los 40 caracteres
+    if (textoSinComillas.length() <= MAX_LENGTH_STRING) {
+        return symbol(ParserSym.STRING_CONSTANT, yytext()); 
+    } else {
+        throw new InvalidLengthException("Largo de variable de tipo string no valido");
+    }
+
+  }
+
   /* identifiers */
   {Identifier}                            { return symbol(ParserSym.IDENTIFIER, yytext()); }
   

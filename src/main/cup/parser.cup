@@ -13,7 +13,7 @@ class Parser;
 
 action code
 {:
-    public Manejador_Tabla_Simbolos Manejador_Tabla_Simbolos = new Manejador_Tabla_Simbolos();
+    public Manejador_Tabla_Simbolos manejadorTablaSimbolos = new Manejador_Tabla_Simbolos();
     public ArrayList<Simbolo> listaSimbolos = new ArrayList<>();
     public int cantidadElementos = 0;
     public int index = 0;
@@ -21,11 +21,11 @@ action code
 
 parser code
 {:
-    public ArrayList<Simbolo> gettablaSimbolos() {
-        return action_obj.Manejador_Tabla_Simbolos.gettablaSimbolos();
+    // Access the symbol table from the action object
+    public ArrayList<Simbolo> getTablaSimbolos() { 
+        return action_obj.manejadorTablaSimbolos.getTablaSimbolos();
     }
 :}
-
 
 // Terminals
 terminal ASSIG;
@@ -53,6 +53,16 @@ terminal NOTEQUALS;
 terminal FLOAT_CONSTANT;
 terminal INTEGER_CONSTANT;
 terminal STRING_CONSTANT;
+terminal WRITE;
+terminal READ;
+terminal WHILE;
+terminal INIT;
+terminal COLON;
+terminal COMMA;
+terminal INT;
+terminal FLOAT;
+terminal STRING;
+
 
 // Non Terminals
 non terminal sentence;
@@ -67,6 +77,13 @@ non terminal condicional;
 non terminal elseif_clauses;
 non terminal relational_op;
 non terminal elseif_clauses_optional;
+non terminal declaration;
+non terminal declaration_list;
+non terminal type;
+non terminal declarations;
+non terminal variable_names;
+non terminal name_init;
+non terminal variable;
 
 // Start Symbol Definition
 start with program;
@@ -84,62 +101,119 @@ sentence_list ::= sentence_list sentence
                | sentence;
 
 sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
-assignment ::= IDENTIFIER:id ASSIG expression:e  
+
+/******** TEMAS COMUNES: Declaración de variables  ********/
+sentence ::= INIT OPEN_BRACE declaration_list CLOSE_BRACE 
 {: 
-    System.out.println("Assignment"); 
-    System.out.println("Id al cual se asigna: " + id);
+    System.out.println("Initialization block parsed."); 
+:};
+
+declaration_list ::= declaration_list declaration
+               | declaration;
+
+declaration ::= variable_names COLON type:type_spec;
+
+variable_names ::= variable_names COMMA name_init:type_spec
+                 | name_init:type_spec;
+
+name_init ::= IDENTIFIER:id
+{:
     Simbolo symbol = new Simbolo(id.toString(), "", "", 0);
-    this.listaSimbolos.add(symbol);
-    
+    this.listaSimbolos.add(symbol); // Store in temporary list
     System.out.println("Se inicializo la variable: " + id.toString());
 :};
-expression ::= expression PLUS term {: System.out.println("+"); :};
-expression ::= expression SUB term {: System.out.println("-"); :};
-expression ::= term;
 
-term ::= term MULT factor {: System.out.println("*"); :};
-term ::= term DIV factor {: System.out.println("/"); :};
-term ::= factor;
+type ::= FLOAT
+{:
+    System.out.println("Se inicializaron todos los datos tipo Float");
+    action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "Float");
+    this.listaSimbolos.clear(); // Clear the list after adding variables
+:}
+| INT
+{:
+    System.out.println("Se inicializaron todos los datos tipo Int");
+    action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "Int");
+    this.listaSimbolos.clear(); // Clear the list after adding variables
+:}
+| STRING
+{:
+    System.out.println("Se inicializaron todos los datos tipo String");
+    action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "String");
+    this.listaSimbolos.clear(); // Clear the list after adding variables
+:};
+
+/******** TEMAS COMUNES: Asignaciones  ********/
+assignment ::= IDENTIFIER:id ASSIG expression:e  
+{:
+    System.out.println("Assignment");
+    System.out.println("Id al cual se asigna: " + id);
+
+    Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
+
+    if (existingSymbol != null) {
+        String existingType = existingSymbol.getTipoDato();
+        String newType = ((Simbolo)e).getTipoDato(); 
+
+        if (!existingType.equals(newType)) {
+            throw new RuntimeException("Type mismatch: No se puede asignar valor de tipo " + newType + " a la variable " + id.toString() + " de tipo " + existingType);
+        }
+    } else {
+    Simbolo symbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
+
+    if (symbol == null) {
+        throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
+    }
+    RESULT = symbol;
+    System.out.println("Id: " + id);
+    }
+:};
+
+expression ::= expression PLUS term:e {: RESULT = e; System.out.println("+"); :};
+expression ::= expression SUB term:e {: RESULT = e; System.out.println("-"); :};
+expression ::= term:e {: RESULT = e; :};
+
+term ::= term MULT factor:f {: RESULT = f; System.out.println("*"); :};
+term ::= term DIV factor:f {: RESULT = f; System.out.println("/"); :};
+term ::= factor:f {: RESULT = f; :};
+
 factor ::= IDENTIFIER:id  
 {: 
-    if (!action_obj.Manejador_Tabla_Simbolos.containsSymbol(id.toString())) {
+    Simbolo symbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
+
+    if (symbol == null) {
         throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
     }
 
+    RESULT = symbol;
     System.out.println("Id: " + id);
 :};
 
 factor ::= FLOAT_CONSTANT:constant 
 {: 
     System.out.println("Float Constant: " + constant ); 
-    Simbolo symbol = new Simbolo("_" + constant.toString(), "Int", constant.toString(), constant.toString().length());
-    action_obj.Manejador_Tabla_Simbolos.addSymbol(symbol);
-
+    Simbolo symbol = new Simbolo("_" + constant.toString(), "Float", constant.toString(), constant.toString().length());
+    action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    RESULT = symbol;
 :};
-
 
 factor ::= INTEGER_CONSTANT:constant 
 {: 
     System.out.println("Int Constant: " + constant ); 
     Simbolo symbol = new Simbolo("_" + constant.toString(), "Int", constant.toString(), constant.toString().length());
-    action_obj.Manejador_Tabla_Simbolos.addSymbol(symbol);
-
+    action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    RESULT = symbol;
 :};
 
 factor ::= STRING_CONSTANT:constant 
 {: 
     System.out.println("String Constant: " + constant ); 
     Simbolo symbol = new Simbolo("_" + constant.toString(), "String", constant.toString(), constant.toString().length());
-    action_obj.Manejador_Tabla_Simbolos.addSymbol(symbol);
-
+    action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    RESULT = symbol;
 :};
 
-
-
-
-
-factor ::= OPEN_BRACE expression CLOSE_BRACE {: System.out.println("Factor = (Expression)"); :};
-
+factor ::= OPEN_PAREN expression:e CLOSE_PAREN {: RESULT = e; System.out.println("Factor = (Expression)"); :};
+/******** TEMAS COMUNES: Si / Si - sino  ********/
 sentence ::= IF condicional OPEN_BRACE sentence_list CLOSE_BRACE elseif_clauses_optional
 {: System.out.println("If with optional else/elseif"); :};
 
@@ -152,6 +226,7 @@ elseif_clauses_optional ::= ELSE OPEN_BRACE sentence_list CLOSE_BRACE
 elseif_clauses ::= ELSEIF condicional OPEN_BRACE sentence_list CLOSE_BRACE elseif_clauses_optional
 {: System.out.println("Else If"); :};
 
+/******** TEMAS COMUNES: Condiciones  ********/
 condicional ::= OPEN_PAREN condicion CLOSE_PAREN
 {: System.out.println("Condicional"); :}
 | OPEN_PAREN NOT condicion CLOSE_PAREN
@@ -176,3 +251,34 @@ relational_op ::= GREATERTHAN
 {: System.out.println("Operador relacional igual"); :}
 | NOTEQUALS
 {: System.out.println("Operador relacional no igual"); :};
+
+/******** TEMAS COMUNES: Mientras  ********/
+sentence ::= WHILE condicional OPEN_BRACE sentence_list CLOSE_BRACE
+{: 
+    System.out.println("Bucle While");
+:};
+
+
+/******** TEMAS COMUNES: Entrada y salida  ********/
+
+sentence ::= READ OPEN_PAREN variable CLOSE_PAREN
+{: 
+    System.out.println("Función Leer");
+:};
+
+sentence ::= WRITE OPEN_PAREN variable CLOSE_PAREN
+{: 
+    System.out.println("Funcion Escribir");
+:}
+| WRITE OPEN_PAREN STRING_CONSTANT CLOSE_PAREN
+{: 
+    System.out.println("Funcion Escribir");
+:};
+
+variable ::= IDENTIFIER:id
+{: 
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol(id.toString())) {
+        throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
+    }
+:};
+
