@@ -21,7 +21,6 @@ action code
 
 parser code
 {:
-    // Access the symbol table from the action object
     public ArrayList<Simbolo> getTablaSimbolos() { 
         return action_obj.manejadorTablaSimbolos.getTablaSimbolos();
     }
@@ -84,8 +83,10 @@ non terminal declarations;
 non terminal variable_names;
 non terminal name_init;
 non terminal variable;
+non terminal simple_condicion;
+non terminal multiple_condicion;
 
-// Start Symbol Definition
+
 start with program;
 
 program ::= sentence_list
@@ -100,7 +101,7 @@ program ::= sentence_list
 sentence_list ::= sentence_list sentence 
                | sentence;
 
-sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
+
 
 /******** TEMAS COMUNES: Declaración de variables  ********/
 sentence ::= INIT OPEN_BRACE declaration_list CLOSE_BRACE 
@@ -119,7 +120,7 @@ variable_names ::= variable_names COMMA name_init:type_spec
 name_init ::= IDENTIFIER:id
 {:
     Simbolo symbol = new Simbolo(id.toString(), "", "", 0);
-    this.listaSimbolos.add(symbol); // Store in temporary list
+    this.listaSimbolos.add(symbol);
     System.out.println("Se inicializo la variable: " + id.toString());
 :};
 
@@ -127,22 +128,23 @@ type ::= FLOAT
 {:
     System.out.println("Se inicializaron todos los datos tipo Float");
     action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "Float");
-    this.listaSimbolos.clear(); // Clear the list after adding variables
+    this.listaSimbolos.clear(); 
 :}
 | INT
 {:
     System.out.println("Se inicializaron todos los datos tipo Int");
     action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "Int");
-    this.listaSimbolos.clear(); // Clear the list after adding variables
+    this.listaSimbolos.clear(); 
 :}
 | STRING
 {:
     System.out.println("Se inicializaron todos los datos tipo String");
     action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "String");
-    this.listaSimbolos.clear(); // Clear the list after adding variables
+    this.listaSimbolos.clear();
 :};
 
 /******** TEMAS COMUNES: Asignaciones  ********/
+sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
 assignment ::= IDENTIFIER:id ASSIG expression:e  
 {:
     System.out.println("Assignment");
@@ -227,17 +229,20 @@ elseif_clauses ::= ELSEIF condicional OPEN_BRACE sentence_list CLOSE_BRACE elsei
 {: System.out.println("Else If"); :};
 
 /******** TEMAS COMUNES: Condiciones  ********/
-condicional ::= OPEN_PAREN condicion CLOSE_PAREN
-{: System.out.println("Condicional"); :}
-| OPEN_PAREN NOT condicion CLOSE_PAREN
-{: System.out.println("Condicional NOT"); :};
+condicional ::= OPEN_PAREN simple_condicion CLOSE_PAREN
+{: System.out.println("Condicional simple"); :}
+| OPEN_PAREN NOT simple_condicion CLOSE_PAREN
+{: System.out.println("Condicional NOT"); :}
+| OPEN_PAREN multiple_condicion CLOSE_PAREN
+{: System.out.println("Condicional múltiple"); :};
 
-condicion ::= condicion AND factor relational_op factor
-{: System.out.println("Condicion con AND"); :}
-| condicion OR factor relational_op factor
-{: System.out.println("Condicion con OR"); :}
-| factor relational_op factor
-{: System.out.println("Condicion"); :};
+simple_condicion ::= factor relational_op factor
+{: System.out.println("Condición simple"); :};
+
+multiple_condicion ::= simple_condicion AND simple_condicion
+{: System.out.println("Condición con AND"); :}
+| simple_condicion OR simple_condicion
+{: System.out.println("Condición con OR"); :};
 
 relational_op ::= GREATERTHAN
 {: System.out.println("Operador relacional mayor"); :}
