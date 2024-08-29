@@ -1,8 +1,30 @@
 package lyc.compiler;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import java_cup.runtime.*;
+import lyc.compiler.tabla_simbolos.*;
+import lyc.compiler.model.*;
 
 class Parser;
+
+action code
+{:
+    public Manejador_Tabla_Simbolos Manejador_Tabla_Simbolos = new Manejador_Tabla_Simbolos();
+    public ArrayList<Simbolo> listaSimbolos = new ArrayList<>();
+    public int cantidadElementos = 0;
+    public int index = 0;
+:}
+
+parser code
+{:
+    public ArrayList<Simbolo> gettablaSimbolos() {
+        return action_obj.Manejador_Tabla_Simbolos.gettablaSimbolos();
+    }
+:}
 
 
 // Terminals
@@ -11,29 +33,146 @@ terminal PLUS;
 terminal SUB;
 terminal MULT;
 terminal DIV;
-terminal OPEN_BRACKET;
-terminal CLOSE_BRACKET;
-terminal INTEGER_CONSTANT;
+terminal OPEN_PAREN;
+terminal CLOSE_PAREN;
+terminal OPEN_BRACE;
+terminal CLOSE_BRACE;
 terminal IDENTIFIER;
+terminal IF;
+terminal ELSE;
+terminal ELSEIF;
+terminal AND;
+terminal OR;
+terminal NOT;
+terminal GREATERTHAN;
+terminal LESSTHAN;
+terminal GREATEREQUAL;
+terminal LESSEQUAL;
+terminal EQUALS;
+terminal NOTEQUALS;
+terminal FLOAT_CONSTANT;
+terminal INTEGER_CONSTANT;
+terminal STRING_CONSTANT;
 
 // Non Terminals
 non terminal sentence;
+non terminal program;
 non terminal assignment;
 non terminal expression;
 non terminal term;
 non terminal factor;
+non terminal sentence_list;
+non terminal condicion;
+non terminal condicional;
+non terminal elseif_clauses;
+non terminal relational_op;
+non terminal elseif_clauses_optional;
 
 // Start Symbol Definition
-start with sentence;
+start with program;
 
-sentence ::= assignment {: System.out.println("End"); :};
-assignment ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :};
+program ::= sentence_list
+{: 
+    System.out.println("Fin"); 
+:}
+| 
+{: 
+    System.out.println("Programa Vacio"); 
+:};
+
+sentence_list ::= sentence_list sentence 
+               | sentence;
+
+sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
+assignment ::= IDENTIFIER:id ASSIG expression:e  
+{: 
+    System.out.println("Assignment"); 
+    System.out.println("Id al cual se asigna: " + id);
+    Simbolo symbol = new Simbolo(id.toString(), "", "", 0);
+    this.listaSimbolos.add(symbol);
+    
+    System.out.println("Se inicializo la variable: " + id.toString());
+:};
 expression ::= expression PLUS term {: System.out.println("+"); :};
 expression ::= expression SUB term {: System.out.println("-"); :};
-expression ::= term {: System.out.println("Expression = Term"); :};
+expression ::= term;
+
 term ::= term MULT factor {: System.out.println("*"); :};
 term ::= term DIV factor {: System.out.println("/"); :};
-term ::= factor {: System.out.println("Term = factor"); :};
-factor ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :};
-factor ::= INTEGER_CONSTANT:constant {: System.out.println("Constant: " + constant ); :};
-factor ::= OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :};
+term ::= factor;
+factor ::= IDENTIFIER:id  
+{: 
+    if (!action_obj.Manejador_Tabla_Simbolos.containsSymbol(id.toString())) {
+        throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
+    }
+
+    System.out.println("Id: " + id);
+:};
+
+factor ::= FLOAT_CONSTANT:constant 
+{: 
+    System.out.println("Float Constant: " + constant ); 
+    Simbolo symbol = new Simbolo("_" + constant.toString(), "Int", constant.toString(), constant.toString().length());
+    action_obj.Manejador_Tabla_Simbolos.addSymbol(symbol);
+
+:};
+
+
+factor ::= INTEGER_CONSTANT:constant 
+{: 
+    System.out.println("Int Constant: " + constant ); 
+    Simbolo symbol = new Simbolo("_" + constant.toString(), "Int", constant.toString(), constant.toString().length());
+    action_obj.Manejador_Tabla_Simbolos.addSymbol(symbol);
+
+:};
+
+factor ::= STRING_CONSTANT:constant 
+{: 
+    System.out.println("String Constant: " + constant ); 
+    Simbolo symbol = new Simbolo("_" + constant.toString(), "String", constant.toString(), constant.toString().length());
+    action_obj.Manejador_Tabla_Simbolos.addSymbol(symbol);
+
+:};
+
+
+
+
+
+factor ::= OPEN_BRACE expression CLOSE_BRACE {: System.out.println("Factor = (Expression)"); :};
+
+sentence ::= IF condicional OPEN_BRACE sentence_list CLOSE_BRACE elseif_clauses_optional
+{: System.out.println("If with optional else/elseif"); :};
+
+elseif_clauses_optional ::= ELSE OPEN_BRACE sentence_list CLOSE_BRACE 
+{: System.out.println("Else clause"); :}
+| elseif_clauses
+| /* empty */
+{: System.out.println("No else/elseif"); :};
+
+elseif_clauses ::= ELSEIF condicional OPEN_BRACE sentence_list CLOSE_BRACE elseif_clauses_optional
+{: System.out.println("Else If"); :};
+
+condicional ::= OPEN_PAREN condicion CLOSE_PAREN
+{: System.out.println("Condicional"); :}
+| OPEN_PAREN NOT condicion CLOSE_PAREN
+{: System.out.println("Condicional NOT"); :};
+
+condicion ::= condicion AND factor relational_op factor
+{: System.out.println("Condicion con AND"); :}
+| condicion OR factor relational_op factor
+{: System.out.println("Condicion con OR"); :}
+| factor relational_op factor
+{: System.out.println("Condicion"); :};
+
+relational_op ::= GREATERTHAN
+{: System.out.println("Operador relacional mayor"); :}
+| LESSTHAN
+{: System.out.println("Operador relacional menor"); :}
+| GREATEREQUAL
+{: System.out.println("Operador relacional mayor o igual"); :}
+| LESSEQUAL
+{: System.out.println("Operador relacional menor o igual"); :}
+| EQUALS
+{: System.out.println("Operador relacional igual"); :}
+| NOTEQUALS
+{: System.out.println("Operador relacional no igual"); :};
