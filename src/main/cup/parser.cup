@@ -1,9 +1,30 @@
 package lyc.compiler;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import java_cup.runtime.*;
+import lyc.compiler.tabla_simbolos.*;
+import lyc.compiler.model.*;
 
 class Parser;
 
+action code
+{:
+    public Manejador_Tabla_Simbolos manejadorTablaSimbolos = new Manejador_Tabla_Simbolos();
+    public ArrayList<Simbolo> listaSimbolos = new ArrayList<>();
+    public int cantidadElementos = 0;
+    public int index = 0;
+:}
+
+parser code
+{:
+    public ArrayList<Simbolo> getTablaSimbolos() { 
+        return action_obj.manejadorTablaSimbolos.getTablaSimbolos();
+    }
+:}
 
 // Terminals
 terminal ASSIG;
@@ -11,29 +32,380 @@ terminal PLUS;
 terminal SUB;
 terminal MULT;
 terminal DIV;
+terminal OPEN_PAREN;
+terminal CLOSE_PAREN;
+terminal OPEN_BRACE;
+terminal CLOSE_BRACE;
+terminal IDENTIFIER;
+terminal IF;
+terminal ELSE;
+terminal ELSEIF;
+terminal AND;
+terminal OR;
+terminal NOT;
+terminal GREATERTHAN;
+terminal LESSTHAN;
+terminal GREATEREQUAL;
+terminal LESSEQUAL;
+terminal EQUALS;
+terminal NOTEQUALS;
+terminal FLOAT_CONSTANT;
+terminal INTEGER_CONSTANT;
+terminal STRING_CONSTANT;
+terminal WRITE;
+terminal READ;
+terminal WHILE;
+terminal INIT;
+terminal COLON;
+terminal SEMICOLON;
+terminal COMMA;
+terminal INT;
+terminal FLOAT;
+terminal STRING;
+terminal GET_PENULTIMATE_POSITION;
+terminal BINARYCOUNT;
+terminal BINARY_CONSTANT;
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
-terminal INTEGER_CONSTANT;
-terminal IDENTIFIER;
-
 // Non Terminals
 non terminal sentence;
+non terminal program;
 non terminal assignment;
 non terminal expression;
 non terminal term;
 non terminal factor;
+non terminal sentence_list;
+non terminal condicion;
+non terminal condicional;
+non terminal elseif_clauses;
+non terminal relational_op;
+non terminal elseif_clauses_optional;
+non terminal declaration;
+non terminal declaration_list;
+non terminal type;
+non terminal declarations;
+non terminal variable_names;
+non terminal name_init;
+non terminal variable;
+non terminal simple_condicion;
+non terminal multiple_condicion;
+non terminal param_list;
+non terminal number_element;
+non terminal binary_count_expr;
+non terminal getPenultimatePosition_expr;
 
-// Start Symbol Definition
-start with sentence;
 
-sentence ::= assignment {: System.out.println("End"); :};
-assignment ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :};
-expression ::= expression PLUS term {: System.out.println("+"); :};
-expression ::= expression SUB term {: System.out.println("-"); :};
-expression ::= term {: System.out.println("Expression = Term"); :};
-term ::= term MULT factor {: System.out.println("*"); :};
-term ::= term DIV factor {: System.out.println("/"); :};
-term ::= factor {: System.out.println("Term = factor"); :};
-factor ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :};
-factor ::= INTEGER_CONSTANT:constant {: System.out.println("Constant: " + constant ); :};
-factor ::= OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :};
+start with program;
+
+program ::= sentence_list
+{: 
+    System.out.println("Fin"); 
+:}
+| 
+{: 
+    System.out.println("Programa Vacio"); 
+:};
+
+sentence_list ::= sentence_list sentence 
+               | sentence;
+
+
+
+/******** TEMAS COMUNES: Declaración de variables  ********/
+sentence ::= INIT OPEN_BRACE declaration_list CLOSE_BRACE 
+{: 
+    System.out.println("Bloque de inicializacion terminado."); 
+:};
+
+declaration_list ::= declaration_list declaration
+               | declaration;
+
+declaration ::= variable_names COLON type:type_spec;
+
+variable_names ::= variable_names COMMA name_init:type_spec
+                 | name_init:type_spec;
+
+name_init ::= IDENTIFIER:id
+{:
+    Simbolo symbol = new Simbolo(id.toString(), "", "", 0);  // Longitud es 0 para variables sin valor asignado.
+    this.listaSimbolos.add(symbol);
+    System.out.println("Se inicializó la variable: " + id.toString());
+:};
+
+type ::= FLOAT
+{:
+    System.out.println("Se inicializaron todos los datos tipo Float");
+    action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "Float");
+    this.listaSimbolos.clear(); 
+:}
+| INT
+{:
+    System.out.println("Se inicializaron todos los datos tipo Int");
+    action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "Int");
+    this.listaSimbolos.clear(); 
+:}
+| STRING
+{:
+    System.out.println("Se inicializaron todos los datos tipo String");
+    action_obj.manejadorTablaSimbolos.addVariablesFromArrayList(this.listaSimbolos, "String");
+    this.listaSimbolos.clear();
+:};
+
+/******** TEMAS COMUNES: Asignaciones  ********/
+sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
+assignment ::= IDENTIFIER:id ASSIG expression:e  
+{:
+    System.out.println("Assignment to variable: " + id);
+
+    Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
+
+    if (existingSymbol != null) {
+        String existingType = existingSymbol.getTipoDato();
+        String newType = ((Simbolo)e).getTipoDato(); 
+
+        if (!existingType.equals(newType)) {
+            throw new RuntimeException("Type mismatch: No se puede asignar un valor de tipo " + newType + " a la variable " + id.toString() + " de tipo " + existingType);
+        } else {
+            // Remove the constant from the table before updating the variable (to avoid duplicates)
+            action_obj.manejadorTablaSimbolos.removeSymbol(((Simbolo)e).getNombre());
+
+            // Update the variable with the new value and length
+            existingSymbol.setValor(((Simbolo)e).getValor());
+            existingSymbol.setLongitud(((Simbolo)e).getLongitud());
+            System.out.println("Variable: " + id.toString() + " updated with value " + existingSymbol.getValor());
+        }
+    } else {
+        throw new RuntimeException("The variable '" + id.toString() + "' is not declared.");
+    }
+:};
+expression ::= expression:e1 PLUS term:e2 
+{:
+    // Verificar que ambos operandos tienen un tipo de dato válido y compatible.
+    if (((Simbolo)e1).getTipoDato().equals(((Simbolo)e2).getTipoDato())) {
+        RESULT = e2;
+        System.out.println("+");
+    } else {
+        throw new RuntimeException("Type mismatch: No se puede sumar " + ((Simbolo)e1).getTipoDato() + " con " + ((Simbolo)e2).getTipoDato());
+    }
+:}
+| expression:e1 SUB term:e2 
+{:
+    if (((Simbolo)e1).getTipoDato().equals(((Simbolo)e2).getTipoDato())) {
+        RESULT = e2;
+        System.out.println("-");
+    } else {
+        throw new RuntimeException("Type mismatch: No se puede restar " + ((Simbolo)e1).getTipoDato() + " con " + ((Simbolo)e2).getTipoDato());
+    }
+:}
+| term:e 
+{:
+    RESULT = e;
+:}
+| getPenultimatePosition_expr:e 
+{:
+    RESULT = e;
+:}
+| binary_count_expr:e 
+{:
+    RESULT = e;
+:};
+
+term ::= term:t MULT factor:f 
+{:
+    if (((Simbolo)t).getTipoDato().equals(((Simbolo)f).getTipoDato())) {
+        RESULT = f;
+        System.out.println("*");
+    } else {
+        throw new RuntimeException("Type mismatch: No se puede multiplicar " + ((Simbolo)t).getTipoDato() + " con " + ((Simbolo)f).getTipoDato());
+    }
+:}
+| term:t DIV factor:f 
+{:
+    if (((Simbolo)t).getTipoDato().equals(((Simbolo)f).getTipoDato())) {
+        RESULT = f;
+        System.out.println("/");
+    } else {
+        throw new RuntimeException("Type mismatch: No se puede dividir " + ((Simbolo)t).getTipoDato() + " con " + ((Simbolo)f).getTipoDato());
+    }
+:}
+| factor:f 
+{:
+    RESULT = f;
+:};
+
+
+factor ::= IDENTIFIER:id  
+{: 
+    Simbolo symbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
+
+    if (symbol == null) {
+        throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
+    }
+
+    RESULT = symbol;
+    System.out.println("Id: " + id);
+:};
+factor ::= FLOAT_CONSTANT:constant 
+{:
+    System.out.println("Constante Float: " + constant );
+
+    // Solo añadir la constante a la tabla si se esta usando por fuera de una asigancion
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol("_" + constant.toString())) {
+        Simbolo symbol = new Simbolo("_" + constant.toString(), "Float", constant.toString(), constant.toString().length());
+        action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    }
+
+
+    Simbolo symbol = new Simbolo("_" + constant.toString(), "Float", constant.toString(), constant.toString().length());
+    RESULT = symbol;
+:};
+
+factor ::= INTEGER_CONSTANT:constant 
+{:
+    System.out.println("Constante Int: " + constant ); 
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol("_" + constant.toString())) {
+        Simbolo symbol = new Simbolo("_" + constant.toString(), "Int", constant.toString(), constant.toString().length());
+        action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    }
+    Simbolo symbol = new Simbolo("", "Int", constant.toString(), constant.toString().length());
+    RESULT = symbol;
+:};
+
+factor ::= STRING_CONSTANT:constant 
+{:
+    System.out.println("Constante String: " + constant ); 
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol("_" + constant.toString())) {
+        Simbolo symbol = new Simbolo("_" + constant.toString(), "String", constant.toString(), constant.toString().length());
+        action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    }
+    Simbolo symbol = new Simbolo("", "String", constant.toString(), constant.toString().length());
+    RESULT = symbol;
+:};
+factor ::= OPEN_PAREN expression:e CLOSE_PAREN {: RESULT = e; System.out.println("Factor = (Expression)"); :};
+/******** TEMAS COMUNES: Si / Si - sino  ********/
+sentence ::= IF condicional OPEN_BRACE sentence_list CLOSE_BRACE elseif_clauses_optional
+{: System.out.println("Bloque de IF"); :};
+
+elseif_clauses_optional ::= ELSE OPEN_BRACE sentence_list CLOSE_BRACE 
+{: System.out.println("Clausula Else"); :}
+| elseif_clauses
+| /* empty */
+{: System.out.println("Sin else/elseif"); :};
+
+elseif_clauses ::= ELSEIF condicional OPEN_BRACE sentence_list CLOSE_BRACE elseif_clauses_optional
+{: System.out.println("Else If"); :};
+
+/******** TEMAS COMUNES: Condiciones  ********/
+condicional ::= OPEN_PAREN simple_condicion CLOSE_PAREN
+{: System.out.println("Condicional simple"); :}
+| OPEN_PAREN NOT simple_condicion CLOSE_PAREN
+{: System.out.println("Condicional NOT"); :}
+| OPEN_PAREN multiple_condicion CLOSE_PAREN
+{: System.out.println("Condicional múltiple"); :};
+
+simple_condicion ::= factor:f1 relational_op factor:f2
+{:
+    // Verificar si los tipos de datos son compatibles
+    String tipo1 = ((Simbolo)f1).getTipoDato();
+    String tipo2 = ((Simbolo)f2).getTipoDato();
+
+    if (!tipo1.equals(tipo2)) {
+        throw new RuntimeException("Type mismatch: No se puede comparar un " + tipo1 + " con un " + tipo2);
+    }
+
+    System.out.println("Condición simple con tipos compatibles: " + tipo1 + " y " + tipo2);
+:};
+
+multiple_condicion ::= simple_condicion AND simple_condicion
+{: System.out.println("Condición con AND"); :}
+| simple_condicion OR simple_condicion
+{: System.out.println("Condición con OR"); :};
+
+relational_op ::= GREATERTHAN
+{: System.out.println("Operador relacional mayor"); :}
+| LESSTHAN
+{: System.out.println("Operador relacional menor"); :}
+| GREATEREQUAL
+{: System.out.println("Operador relacional mayor o igual"); :}
+| LESSEQUAL
+{: System.out.println("Operador relacional menor o igual"); :}
+| EQUALS
+{: System.out.println("Operador relacional igual"); :}
+| NOTEQUALS
+{: System.out.println("Operador relacional no igual"); :};
+
+/******** TEMAS COMUNES: Mientras  ********/
+sentence ::= WHILE condicional OPEN_BRACE sentence_list CLOSE_BRACE
+{: 
+    System.out.println("Bucle While");
+:};
+
+
+/******** TEMAS COMUNES: Entrada y salida  ********/
+
+sentence ::= READ OPEN_PAREN variable CLOSE_PAREN
+{: 
+    System.out.println("Función Leer");
+:};
+
+sentence ::= WRITE OPEN_PAREN variable CLOSE_PAREN
+{: 
+    System.out.println("Funcion Escribir");
+:}
+| WRITE OPEN_PAREN STRING_CONSTANT CLOSE_PAREN
+{:
+    System.out.println("Funcion Escribir");
+:};
+
+variable ::= IDENTIFIER:id
+{: 
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol(id.toString())) {
+        throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
+    }
+:};
+
+/******** TEMAS ESPECIALES: getPenultimatePosition  ********/
+getPenultimatePosition_expr ::= GET_PENULTIMATE_POSITION OPEN_PAREN INTEGER_CONSTANT:pivot SEMICOLON OPEN_BRACKET param_list:pl CLOSE_BRACKET CLOSE_PAREN
+{:
+    // Convierte el pivote a int directamente
+    int pivotValue = Integer.parseInt(pivot.toString());
+
+    // Asegúrate de que 'pl' sea una lista de Simbolo
+    List<Simbolo> elementos = (List<Simbolo>)pl;
+
+    // Si el pivote está fuera de los límites de la lista, retornamos un entero con valor 0
+    if (pivotValue < 1 || pivotValue > elementos.size()) {
+        RESULT = new Simbolo("getPenultimateResult", "Int", "0", 1);
+        System.out.println("Pivote fuera de rango. Devolviendo 0.");
+    } else {
+        // Obtener el tipo de dato del elemento en la posición del pivote
+        Simbolo elementoEnPivote = elementos.get(pivotValue - 1);
+        RESULT = new Simbolo("getPenultimateResult", elementoEnPivote.getTipoDato(), elementoEnPivote.getValor(), elementoEnPivote.getLongitud());
+        System.out.println("Tipo de retorno de getPenultimatePosition: " + elementoEnPivote.getTipoDato());
+    }
+:};
+
+param_list ::= param_list:pl COMMA factor:f
+{:
+    // Obtener la lista de elementos acumulados
+    List<Simbolo> lista = (List<Simbolo>)pl;
+    lista.add((Simbolo)f);
+    RESULT = lista;
+    System.out.println("Añadido factor a la lista de parámetros.");
+:}
+| factor:f
+{:
+    // Crear una nueva lista con un solo factor
+    List<Simbolo> lista = new ArrayList<>();
+    lista.add((Simbolo)f);
+    RESULT = lista;
+    System.out.println("Factor en lista de parámetros.");
+:};
+/******** TEMAS ESPECIALES: binaryCount ********/
+
+binary_count_expr ::= BINARYCOUNT OPEN_PAREN OPEN_BRACKET param_list CLOSE_BRACKET CLOSE_PAREN
+{:
+    System.out.println("Función binaryCount llamada.");
+    Simbolo result = new Simbolo("binaryCountResult", "Int", "0", 1); 
+    RESULT = result;
+:};
