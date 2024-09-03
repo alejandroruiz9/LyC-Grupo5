@@ -26,6 +26,7 @@ parser code
     }
 :}
 
+
 // Terminals
 terminal ASSIG;
 terminal PLUS;
@@ -64,7 +65,6 @@ terminal FLOAT;
 terminal STRING;
 terminal GET_PENULTIMATE_POSITION;
 terminal BINARYCOUNT;
-terminal BINARY_CONSTANT;
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
 // Non Terminals
@@ -75,7 +75,6 @@ non terminal expression;
 non terminal term;
 non terminal factor;
 non terminal sentence_list;
-non terminal condicion;
 non terminal condicional;
 non terminal elseif_clauses;
 non terminal relational_op;
@@ -83,14 +82,12 @@ non terminal elseif_clauses_optional;
 non terminal declaration;
 non terminal declaration_list;
 non terminal type;
-non terminal declarations;
 non terminal variable_names;
 non terminal name_init;
 non terminal variable;
 non terminal simple_condicion;
 non terminal multiple_condicion;
 non terminal param_list;
-non terminal number_element;
 non terminal binary_count_expr;
 non terminal getPenultimatePosition_expr;
 
@@ -406,6 +403,10 @@ param_list ::= param_list:pl COMMA factor:f
 binary_count_expr ::= BINARYCOUNT OPEN_PAREN OPEN_BRACKET param_list CLOSE_BRACKET CLOSE_PAREN
 {:
     System.out.println("Función binaryCount llamada.");
-    Simbolo result = new Simbolo("binaryCountResult", "Int", "0", 1); 
-    RESULT = result;
+
+    // El tipo de retorno siempre será un entero, sin importar la operación real
+    Simbolo tipoResultado = new Simbolo("binaryCountResult", "Int", "", 0);
+    
+    action_obj.manejadorTablaSimbolos.addSymbol(tipoResultado);
+    RESULT = tipoResultado;
 :};

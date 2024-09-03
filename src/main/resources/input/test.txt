@@ -21,18 +21,13 @@ init {
 *- PRUEBAS DE ASIGNACIONES -*
 
 varInt1 := 5  *- Asignación de constantes enteras -*
-
 varFloat1 := 3.14  *- Asignación de constantes flotantes -*
-
-varString1 := "Hello"  *- Asignación de constantes de cadena -*
-
+varString1 := "hola"  *- Asignación de constantes de cadena -*
 varInt2 := varInt1 + 10  *- Suma de variables enteras y constantes -*
 varFloat2 := varFloat1 * 2.5  *- Multiplicación de variables flotantes y constantes -*
 varInt1 := varInt2 - 3  *- Resta de variables enteras y constantes -*
 varFloat1 := varFloat2 / 1.5  *- División de variables flotantes y constantes -*
-
 varInt1 := binaryCount([110, 1, 0, 5, 10101])  *- Asignación con función binaryCount -*
-
 varInt1 := getPenultimatePosition(3; [3, 8.2, 2, 55.5, 7, 252])  *- Asignación con función getPenultimatePosition con resultado entero -*
 varFloat1 := getPenultimatePosition(2; [5.5, 10.1, 20.3])  *- Asignación con función getPenultimatePosition con resultado flotante -*
 
@@ -41,15 +36,71 @@ varFloat1 := getPenultimatePosition(2; [5.5, 10.1, 20.3])  *- Asignación con fu
 varInt1 := varInt2 + varInt1 - 3  *- Suma y resta de variables enteras -*
 varFloat1 := varFloat2 * 2.5 / 1.5  *- Multiplicación y división de variables flotantes -*
 
+*- PRUEBAS DE CONDICIONES (IF/ELSE) -*
+
+if (varInt1 > 0) {
+    varInt2 := varInt1 + 10  *- Condición simple con asignación -*
+}
+
+if (varFloat1 <= 10.0) {
+    varFloat2 := varFloat1 * 1.1
+} else {
+    varFloat2 := varFloat1 / 2.0  *- Condición con else y asignación -*
+}
+
+if (varString1 == "Hello") {
+    varString2 := "World"
+} elseif (varString1 == "Hola") {
+    varString2 := "Pepe"
+} else {
+    varString2 := "Cacho"  *- Condición con elseif y else -*
+}
+
+*- PRUEBAS DE BUCLES (WHILE) -*
+
+while (varInt1 < 10) {
+    varInt1 := varInt1 + 1  *- Bucle while con incremento de variable -*
+}
+
+while (varFloat1 >= 1.0) {
+    varFloat1 := varFloat1 - 0.5  *- Bucle while con decremento de variable -*
+}
+while (varInt1 < 10) {
+    varInt2 := 0
+    while (varInt2 < varInt1) {
+        varInt2 := varInt2 + 1
+    }
+    varInt1 := varInt1 + 1
+}
+
+
 *- PRUEBAS DE ERRORES -*
 
 *-varInt1 := 3.14  *- Error: Asignación de flotante a variable entera -*
 *-varFloat1 := 3 * 2.1  *- Error: Operaciones entre tipos de dato de distinto tipo -*
 *-varFloat1 := 5  *- Error: Asignación de entero a variable flotante -*
-*-varString1 := 123 *- Error: Asignación de entero a variable de cadena -*
+*-varString1 := 123  *- Error: Asignación de entero a variable de cadena -*
 *-varInt1 := varString1 + 5  *- Error: Operación aritmética entre cadena y entero -*
-*-varFloat1 := varInt1 * "Hello" *- Error: Operación aritmética entre entero y cadena -*
+*-varFloat1 := varInt1 * "Hello"  *- Error: Operación aritmética entre entero y cadena -*
 *-varInt1 := getPenultimatePosition(0; [5.5, 10.1, 20.3])  *- Error: Pivote fuera de rango en getPenultimatePosition -*
-*-varFloat1 := getPenultimatePosition(5; [3, 8.2, 2])  *- Error: Type missmatch -*
+*-varFloat1 := getPenultimatePosition(5; [3, 8.2, 2])  *- Error: Pivote fuera de rango en getPenultimatePosition -*
+*-varInt1 := binaryCount([110, 1.1, 0, 5, "Hello"])  *- Error: Elemento en lista de binaryCount no válido -*
+*-if (varString1 > 10) {
+*-    varString2 := "Error"
+*-}  *- Error: Comparación no válida entre cadena y entero -*
+varInt1 := 2147483648  *- Error: Entero fuera de rango -*
+varFloat1 := 3.4E+39  *- Error: Flotante fuera de rango -*
+esteIdentificadorLargoDeberiaTirarUnError := 5  *- Error: Identificador demasiado largo -*
 
 
+*- PRUEBAS DE ERRORES DE SINTAXIS -*
+
+*-varInt1 := 5 +  *- Error: Operación incompleta en asignación -*
+*-if (varInt1 > 0 {  *- Error: Falta de paréntesis de cierre en condición if -*
+*-    varInt2 := 10
+*-}
+*-while varInt1 < 10) {  *- Error: Falta de paréntesis de apertura en bucle while -*
+*-    varInt1 := varInt1 + 1
+*-}
+*-init varInt1, varInt2 : Int  *- Error: Falta de llaves en bloque init -*
+*-varInt1 := binaryCount(110, 1, 0, 5, 10101)  *- Error: Falta de corchetes en llamada a binaryCount -*
