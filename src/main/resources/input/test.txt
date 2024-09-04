@@ -88,8 +88,8 @@ while (varInt1 < 10) {
 *-if (varString1 > 10) {
 *-    varString2 := "Error"
 *-}  *- Error: Comparación no válida entre cadena y entero -*
-varInt1 := 2147483648  *- Error: Entero fuera de rango -*
-varFloat1 := 3.4E+39  *- Error: Flotante fuera de rango -*
+varInt1 := 32768  *- Error: Entero fuera de rango -*
+varString1 := "12345678901234567890123456789012345678901"  *- Error: String fuera de rango -*
 esteIdentificadorLargoDeberiaTirarUnError := 5  *- Error: Identificador demasiado largo -*
 
 
