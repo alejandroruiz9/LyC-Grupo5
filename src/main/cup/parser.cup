@@ -27,7 +27,7 @@ parser code
 :}
 
 
-// Terminals
+// Terminales
 terminal ASSIG;
 terminal PLUS;
 terminal SUB;
@@ -67,7 +67,7 @@ terminal GET_PENULTIMATE_POSITION;
 terminal BINARYCOUNT;
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
-// Non Terminals
+// No Terminales
 non terminal sentence;
 non terminal program;
 non terminal assignment;
@@ -152,7 +152,7 @@ type ::= FLOAT
 sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
 assignment ::= IDENTIFIER:id ASSIG expression:e  
 {:
-    System.out.println("Assignment to variable: " + id);
+    System.out.println("Asignacion a variable: " + id);
 
     Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
 

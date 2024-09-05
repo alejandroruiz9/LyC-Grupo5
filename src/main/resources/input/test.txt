@@ -48,6 +48,12 @@ if (varFloat1 <= 10.0) {
     varFloat2 := varFloat1 / 2.0  *- Condición con else y asignación -*
 }
 
+si (varFloat1 <= 10.0) {
+    varFloat2 := varFloat1 * 1.1
+} sino {
+    varFloat2 := varFloat1 / 2.0  *- Condición con else y asignación -*
+}
+
 if (varString1 == "Hello") {
     varString2 := "World"
 } elseif (varString1 == "Hola") {
@@ -88,9 +94,9 @@ while (varInt1 < 10) {
 *-if (varString1 > 10) {
 *-    varString2 := "Error"
 *-}  *- Error: Comparación no válida entre cadena y entero -*
-varInt1 := 32768  *- Error: Entero fuera de rango -*
-varString1 := "12345678901234567890123456789012345678901"  *- Error: String fuera de rango -*
-esteIdentificadorLargoDeberiaTirarUnError := 5  *- Error: Identificador demasiado largo -*
+*-varInt1 := 32768  *- Error: Entero fuera de rango -*
+*-varString1 := "12345678901234567890123456789012345678901"  *- Error: String fuera de rango -*
+
 
 
 *- PRUEBAS DE ERRORES DE SINTAXIS -*

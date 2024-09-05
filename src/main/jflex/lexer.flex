@@ -70,7 +70,7 @@ comma=","
 semicolon=";"
 getPenultimatePosition="getPenultimatePosition"
 binaryCount="binaryCount"
-BinaryConstant = (0|1)+
+
 
 Letter = [a-zA-Z]
 Digit = [0-9]
@@ -88,7 +88,7 @@ Identifier = {Letter} ({Letter}|{Digit})*
 /* keywords */
 
 <YYINITIAL> {
-  {binaryCount}                             {return symbol(ParserSym.BINARYCOUNT);}
+  
   /* Comentarios */
   {Comentarios}                          { /* ignore */ }
   /* operators */
@@ -124,7 +124,7 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {Int}                                     { return symbol(ParserSym.INT); }
   {String}                                  { return symbol(ParserSym.STRING); }
   {getPenultimatePosition}                  { return symbol(ParserSym.GET_PENULTIMATE_POSITION); }
-  
+  {binaryCount}                             {return symbol(ParserSym.BINARYCOUNT);}
   
 
 
