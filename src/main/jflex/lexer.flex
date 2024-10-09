@@ -49,6 +49,8 @@ OpenParen = "("
 CloseParen = ")"
 OpenBrace = "{"
 CloseBrace = "}"
+OpenBracket = "["
+CloseBracket = "]"
 GreaterThan = ">"
 LessThan = "<"
 GreaterEqual = ">="
@@ -65,6 +67,9 @@ while = "while"
 init="init"
 colon=":"
 comma=","
+semicolon=";"
+getPenultimatePosition="getPenultimatePosition"
+binaryCount="binaryCount"
 
 
 Letter = [a-zA-Z]
@@ -76,13 +81,14 @@ FloatConstant = {IntegerConstant} "." {IntegerConstant} | "." {IntegerConstant} 
 
 WhiteSpace = {LineTerminator} | {Identation}
 Identifier = {Letter} ({Letter}|{Digit})*
-IntegerConstant = {Digit}+
+
 
 %%
 
 /* keywords */
 
 <YYINITIAL> {
+  
   /* Comentarios */
   {Comentarios}                          { /* ignore */ }
   /* operators */
@@ -102,6 +108,7 @@ IntegerConstant = {Digit}+
   {init}                                    { return symbol(ParserSym.INIT); }
   {comma}                                    { return symbol(ParserSym.COMMA); }
   {colon}                                    { return symbol(ParserSym.COLON); }
+  {semicolon}                               { return symbol(ParserSym.SEMICOLON); }
   {if}                                     { return symbol(ParserSym.IF); }
   {si}                                     { return symbol(ParserSym.IF); }
   {elseif}                                 { return symbol(ParserSym.ELSEIF); }
@@ -116,6 +123,8 @@ IntegerConstant = {Digit}+
   {Float}                                   { return symbol(ParserSym.FLOAT); }
   {Int}                                     { return symbol(ParserSym.INT); }
   {String}                                  { return symbol(ParserSym.STRING); }
+  {getPenultimatePosition}                  { return symbol(ParserSym.GET_PENULTIMATE_POSITION); }
+  {binaryCount}                             {return symbol(ParserSym.BINARYCOUNT);}
   
 
 
@@ -147,8 +156,9 @@ IntegerConstant = {Digit}+
     } else {
         throw new InvalidLengthException("Largo de variable de tipo string no valido");
     }
-
+    
   }
+
 
   /* identifiers */
   {Identifier}                            { return symbol(ParserSym.IDENTIFIER, yytext()); }
@@ -158,6 +168,8 @@ IntegerConstant = {Digit}+
   {CloseParen}                             { return symbol(ParserSym.CLOSE_PAREN); }
   {OpenBrace}                              { return symbol(ParserSym.OPEN_BRACE); }
   {CloseBrace}                             { return symbol(ParserSym.CLOSE_BRACE); }
+  {OpenBracket}                            { return symbol(ParserSym.OPEN_BRACKET); }
+  {CloseBracket}                             { return symbol(ParserSym.CLOSE_BRACKET); }
 
   /* whitespace */
   {WhiteSpace}                             { /* ignore */ }

@@ -56,5 +56,7 @@ public class Manejador_Tabla_Simbolos {
         }
         return null;
     }
-
+    public void removeSymbol(String nombreSimbolo) {
+        tablaSimbolos.removeIf(symbol -> symbol.getNombre().equals(nombreSimbolo));
+    }
 }
