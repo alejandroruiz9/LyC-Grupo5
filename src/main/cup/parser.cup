@@ -207,7 +207,7 @@ assignment ::= IDENTIFIER:id ASSIG expression:e
 
     // Crear el terceto de asignación
     int indice = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
-    action_obj.manejador_Tercetos.crearNuevoTerceto(indice, ":=", id.toString(), "[" + action_obj.manejador_Tercetos.obtenerIndice("expression") + "]");
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indice, ":=", "[" + action_obj.manejador_Tercetos.obtenerIndice("expression") + "]", id.toString());
     System.out.println("Indice expresion:" + action_obj.manejador_Tercetos.obtenerIndice("expression"));
     // Validar la compatibilidad de tipos utilizando el terceto
     Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
