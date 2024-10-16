@@ -3,8 +3,6 @@ package lyc.compiler.main;
 import lyc.compiler.Parser;
 import lyc.compiler.factories.FileFactory;
 import lyc.compiler.factories.ParserFactory;
-import lyc.compiler.files.FileOutputWriter;
-import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.*;
 import lyc.compiler.tabla_simbolos.*;
 
@@ -25,7 +23,7 @@ public final class Compiler {
             Parser parser = ParserFactory.create(reader);
             parser.parse();
             FileOutputWriter.writeOutput("symbol-table.txt", new SymbolTableGenerator(parser.getTablaSimbolos()));
-            FileOutputWriter.writeOutput("intermediate-code.txt", new SymbolTableGenerator(parser.getTablaSimbolos()));
+            FileOutputWriter.writeOutput("intermediate-code.txt",new IntermediateCodeGenerator(parser.getIntermediateCode()));
             FileOutputWriter.writeOutput("final.asm", new SymbolTableGenerator(parser.getTablaSimbolos()));
         } catch (IOException e) {
             System.err.println("There was an error trying to read input file " + e.getMessage());

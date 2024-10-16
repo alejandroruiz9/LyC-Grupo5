@@ -27,7 +27,7 @@ varInt2 := varInt1 + 10  *- Suma de variables enteras y constantes -*
 varFloat2 := varFloat1 * 2.5  *- Multiplicación de variables flotantes y constantes -*
 varInt1 := varInt2 - 3  *- Resta de variables enteras y constantes -*
 varFloat1 := varFloat2 / 1.5  *- División de variables flotantes y constantes -*
-varInt1 := binaryCount([110, 1, 0, 5, 10101])  *- Asignación con función binaryCount -*
+varInt1 := binaryCount([110, 1, varInt1, 5, 10101])  *- Asignación con función binaryCount -*
 varInt1 := getPenultimatePosition(3; [3, 8.2, 2, 55.5, 7, 252])  *- Asignación con función getPenultimatePosition con resultado entero -*
 varFloat1 := getPenultimatePosition(2; [5.5, 10.1, 20.3])  *- Asignación con función getPenultimatePosition con resultado flotante -*
 
@@ -56,8 +56,6 @@ si (varFloat1 <= 10.0) {
 
 if (varString1 == "Hello") {
     varString2 := "World"
-} elseif (varString1 == "Hola") {
-    varString2 := "Pepe"
 } else {
     varString2 := "Cacho"  *- Condición con elseif y else -*
 }

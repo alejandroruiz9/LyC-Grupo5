@@ -3,6 +3,7 @@ package lyc.compiler.files;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import lyc.compiler.tabla_simbolos.Simbolo;
 
@@ -16,8 +17,9 @@ public class SymbolTableGenerator implements FileGenerator{
 
     @Override
     public void generate(FileWriter fileWriter) throws IOException {
+        fileWriter.write("NOMBRE | TIPODATO | VALOR | LONGITUD \n");
         for (Simbolo symbol : symbolTable) {
-            fileWriter.write(symbol.getNombre() + " | " + symbol.getTipoDato() + " | " + symbol.getValor() + " | " + symbol.getLongitud() + "\n");
+            fileWriter.write(symbol.getNombre() + " | " + symbol.getTipoDato() + " | " + symbol.getValor() + " | " + Objects.toString(symbol.getLongitud(), "") + "\n");
         }
     }
 }

@@ -3,7 +3,7 @@ package lyc.compiler.tabla_simbolos;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-
+import lyc.compiler.tercetos.*;
 
 public class Manejador_Tabla_Simbolos {
  
@@ -41,7 +41,9 @@ public class Manejador_Tabla_Simbolos {
     }
 
     public boolean containsSymbol(String nombreSimbolo) {
+        
         for (Simbolo symbol : tablaSimbolos) {
+            //System.out.println("Comparando: " + symbol.getNombre() + " con " + nombreSimbolo);
             if (symbol.getNombre().equals(nombreSimbolo)) {
                 return true;
             }
@@ -56,7 +58,13 @@ public class Manejador_Tabla_Simbolos {
         }
         return null;
     }
+
+    
     public void removeSymbol(String nombreSimbolo) {
         tablaSimbolos.removeIf(symbol -> symbol.getNombre().equals(nombreSimbolo));
     }
+
+
+
+
 }

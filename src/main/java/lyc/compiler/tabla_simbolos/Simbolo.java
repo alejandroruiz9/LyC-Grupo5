@@ -23,7 +23,15 @@ public class Simbolo {
     }
 
     public String getTipoDato() {
-        return tipoDato;
+
+        if(tipoDato=="CTE_INTEGER")
+            return "Int;";
+        else if(tipoDato=="CTE_FLOAT")
+            return "Float";
+        else if(tipoDato=="CTE_STRING")
+            return "String";
+        else
+            return tipoDato;
     }
 
     public void setTipoDato(String tipoDato) {
