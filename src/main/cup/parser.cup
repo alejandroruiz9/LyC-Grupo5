@@ -523,11 +523,21 @@ System.out.println("Operador relacional igual"); :}
 System.out.println("Operador relacional no igual"); :};
 
 /******** TEMAS COMUNES: Mientras  ********/
-sentence ::= WHILE condicional OPEN_BRACE sentence_list CLOSE_BRACE
+sentence ::= WHILE 
+{:
+numerosDeTercetosStack.push(indexTerceto);
+:}
+condicional OPEN_BRACE sentence_list CLOSE_BRACE
 {: 
     System.out.println("Bucle While");
     int nroTercetoDesapilado = numerosDeTercetosStack.pop();
+
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, "BI", Integer.toString(nroTercetoDesapilado-1), "_"));
+
+    nroTercetoDesapilado= numerosDeTercetosStack.pop();
     action_obj.manejador_Tercetos.modificarTerceto(nroTercetoDesapilado, 2 ,"[" + Integer.toString(indexTerceto) +"]");
+
+
 :};
 
 
