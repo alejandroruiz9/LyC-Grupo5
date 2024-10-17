@@ -483,10 +483,8 @@ simple_condicion ::= factor:f1 relational_op:r_op factor:f2
     // Incrementar el índice del terceto
     indexTerceto++;
 
-    // Crear el terceto de salto condicional con el operador correspondiente
-    int indiceSalto = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
     action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, operadorContrario, "_", "_");
-
+    System.out.println("Bucle While" + indexTerceto);
     // Guardar el número del terceto de salto en la pila
     numerosDeTercetosStack.push(indexTerceto);
 
@@ -499,9 +497,40 @@ simple_condicion ::= factor:f1 relational_op:r_op factor:f2
 
 
 multiple_condicion ::= simple_condicion AND simple_condicion
-{: System.out.println("Condición con AND"); :}
-| simple_condicion OR simple_condicion
-{: System.out.println("Condición con OR"); :};
+{:
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "[" + Integer.toString(indexTerceto+2 ) + "]", "_");
+    indexTerceto++;
+
+    int saltoSegundaCondicion = numerosDeTercetosStack.pop();
+    action_obj.manejador_Tercetos.modificarTerceto(saltoSegundaCondicion, 2, "[" + Integer.toString(indexTerceto) + "]");
+    int saltoPrimeraCondicion = numerosDeTercetosStack.pop();
+    action_obj.manejador_Tercetos.modificarTerceto(saltoPrimeraCondicion, 2, "[" + Integer.toString(indexTerceto) + "]");
+
+
+
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "_", "_");
+    numerosDeTercetosStack.push(indexTerceto);
+    indexTerceto++;
+
+:};
+multiple_condicion ::= simple_condicion
+{:
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "_", "_");
+    numerosDeTercetosStack.push(indexTerceto);
+    indexTerceto++;
+:} OR simple_condicion
+{:
+
+    int saltoSegundaCondicion = numerosDeTercetosStack.pop();
+    int saltoBI = numerosDeTercetosStack.pop();
+
+    action_obj.manejador_Tercetos.modificarTerceto(saltoBI, 2, "[" + Integer.toString(indexTerceto) + "]");
+    int saltoPrimeraCondicion = numerosDeTercetosStack.pop();
+    action_obj.manejador_Tercetos.modificarTerceto(saltoPrimeraCondicion, 2, "[" + Integer.toString(saltoPrimeraCondicion+2) + "]");
+
+    numerosDeTercetosStack.push(saltoSegundaCondicion);
+    
+:};
 
 relational_op ::= GREATERTHAN
 {: operadorContrario = "BLE";
@@ -530,12 +559,15 @@ numerosDeTercetosStack.push(indexTerceto);
 condicional OPEN_BRACE sentence_list CLOSE_BRACE
 {: 
     System.out.println("Bucle While");
-    int nroTercetoDesapilado = numerosDeTercetosStack.pop();
+    int nroTercetoDesapilado= numerosDeTercetosStack.pop();
+    System.out.println("Operador"+ nroTercetoDesapilado);
+    action_obj.manejador_Tercetos.modificarTerceto(nroTercetoDesapilado, 2 ,"[" + Integer.toString(indexTerceto +1) +"]");
 
-    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, "BI", Integer.toString(nroTercetoDesapilado-1), "_"));
 
-    nroTercetoDesapilado= numerosDeTercetosStack.pop();
-    action_obj.manejador_Tercetos.modificarTerceto(nroTercetoDesapilado, 2 ,"[" + Integer.toString(indexTerceto) +"]");
+    nroTercetoDesapilado = numerosDeTercetosStack.pop();
+
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, "BI", "[" + Integer.toString(nroTercetoDesapilado)+"]", "_"));
+    indexTerceto++;
 
 
 :};

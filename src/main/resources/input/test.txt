@@ -21,11 +21,7 @@ init {
 *- PRUEBAS DE ASIGNACIONES -*
 
 
-while (varInt1 < 10) {
-    varInt2 := 0
-    while (varInt2 < varInt1) {
-        varInt2 := varInt2 + 1
-    }
-    varInt1 := varInt1 + 1
+while (varInt1 < 10 AND varInt1 > 10) {
+    var1:=2
 }
 
