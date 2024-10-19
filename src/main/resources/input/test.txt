@@ -21,6 +21,7 @@ init {
 *- PRUEBAS DE ASIGNACIONES -*
 
 varInt1 := 5  *- Asignación de constantes enteras -*
+varInt1 := 5  *- Esto no deberia agregar duplicados a la tabla de simbolos -*
 varFloat1 := 3.14  *- Asignación de constantes flotantes -*
 varString1 := "hola"  *- Asignación de constantes de cadena -*
 varInt2 := varInt1 + 10  *- Suma de variables enteras y constantes -*
