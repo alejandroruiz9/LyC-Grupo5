@@ -107,3 +107,4 @@ while (varInt1 < 10) {
 *-init varInt1, varInt2 : Int  *- Error: Falta de llaves en bloque init -*
 *-varInt1 := binaryCount(110, 1, 0, 5, 10101)  *- Error: Falta de corchetes en llamada a binaryCount -*
 
+*- PRUEBAS DE CARACTER INVALIDO EN COMENTARIOS (Agregar arroba para que de error de sintaxis)-*

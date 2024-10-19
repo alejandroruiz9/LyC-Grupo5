@@ -26,9 +26,16 @@ import static lyc.compiler.constants.Constants.*;
   private Symbol symbol(int type, Object value) {
     return new Symbol(type, yyline, yycolumn, value);
   }
+  public class InvalidCommentCharacterException extends RuntimeException {
+      public InvalidCommentCharacterException(String message) {
+          super(message);
+      }
+  }
+
+  private boolean isInBlockComment = false; 
 %}
 
-
+%state COMMENT_BLOCK
 LineTerminator = \r|\n|\r\n
 Identation =  [ \t\f]
 
@@ -85,11 +92,27 @@ Identifier = {Letter} ({Letter}|{Digit})*
 %%
 
 /* keywords */
+  <COMMENT_BLOCK> {
+    "-*"                { isInBlockComment = false; yybegin(YYINITIAL); }     // Fin del comentario de bloque
+
+    // Caracteres válidos: letras, números, espacios, signos de puntuación comunes
+      [a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ:=;<> \t\n\r\.\,\!\?\+\-\*/\(\)\[\]\{\}\"']  { /* Aceptar contenido válido del comentario */ }
+
+    // Detectar caracteres especiales no permitidos, como @, #, %, $, &, etc.
+    [@#$%&*<>]         { throw new InvalidCommentCharacterException("Caracter inválido en comentario de bloque: " + yytext()); }
+
+    // Cualquier otro carácter no permitido
+    [^]                 { throw new InvalidCommentCharacterException("Caracter inválido en comentario de bloque: " + yytext()); }
+  }
+  
 
 <YYINITIAL> {
   
   /* Comentarios */
-  {Comentarios}                          { /* ignore */ }
+  "*-"                { isInBlockComment = true; yybegin(COMMENT_BLOCK); }  // Comentario de bloque
+
+
+
   /* operators */
   {Plus}                                   { return symbol(ParserSym.PLUS); }
   {Sub}                                    { return symbol(ParserSym.SUB); }
