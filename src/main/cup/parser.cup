@@ -1,3 +1,49 @@
+/**
+ * Este compilador utiliza para la generación de código intermedio
+ * tercetos y una tabla de símbolos para la gestión de tipos de datos.
+ * Detallamos a continuacion algunas consideraciones que se tuvieron a la hora de armar el compilador:
+ * 
+ * 1. **Declaración de Variables**:
+ *    - Las variables deben ser declaradas antes de ser usadas en cualquier operación o asignación.
+ *    - Los tipos soportados son `INT`, `FLOAT`, y `STRING`.
+ *    - El tipo de las variables se determina durante la declaración y se almacena en la tabla de símbolos.
+ *
+ * 2. **Asignaciones**:
+ *    - Las asignaciones deben respetar las reglas de tipos de datos. No es posible asignar un valor de tipo diferente
+ *      al tipo de la variable.
+ *      Por ejemplo, no se puede asignar un `FLOAT` a una variable `INT`, lo que dara un error de tipo de dato.
+ * 
+ * 3. **Operaciones Aritméticas**:
+ *    - Las operaciones aritméticas como suma (+), resta (-), multiplicación (*) y división (/) requieren que ambos operandos
+ *      sean del mismo tipo. Si se intenta operar con tipos incompatibles, se lanzará un error.
+ *      Esta pendiente la creacion de una funcion de casteo que permita operar con diferentes tipos de variables
+ *
+ * 4. **Condicionales y Comparaciones**:
+ *    - Las comparaciones en condicionales deben realizarse entre operandos del mismo tipo.
+ *    - Los operadores relacionales incluyen mayor (`>`), menor (`<`), igual (`==`), y sus combinaciones con mayor o igual (`>=`),
+ *      menor o igual (`<=`), no igual (`!=`).
+ *    - En caso de intentar comparar tipos incompatibles, se lanzará un error de tipo de dato.
+ * 
+ * 5. **Control de Flujo**:
+ *    - El compilador soporta estructuras de control como `if-else` y `while`. No se acepta elseif.
+ *    - Las condiciones en estas estructuras deben ser evaluaciones booleanas, derivadas de las comparaciones entre valores.
+ * 
+ * 6. **Entrada y Salida**:
+ *    - `READ` y `WRITE` permiten leer y escribir valores de variables y constantes.
+ *    - Las operaciones de lectura y escritura deben ser coherentes con el tipo de dato de las variables.
+ * 
+ * 7. **Manejo de Expresiones Especiales**:
+ *    - Se incluyen operaciones especiales como `BINARYCOUNT` para contar el número de números binarios en una lista
+ *      y `GET_PENULTIMATE_POSITION` para obtener el elemento en una posición específica de una lista.
+ *    - Estas operaciones se implementan con la validación necesaria de los valores ingresados.
+ * 
+ * 8. **Errores de Tipos**:
+ *    - El sistema de tipos garantiza que no se puedan realizar operaciones o asignaciones entre tipos incompatibles,
+ *      lanzando errores cuando estos casos se detectan durante la compilación.
+ * 
+ */
+
+
 package lyc.compiler;
 
 import java.io.FileWriter;
@@ -17,49 +63,24 @@ class Parser;
 
 action code
 {:
+    /**** Tabla de simbolos ****/
     public Manejador_Tabla_Simbolos manejadorTablaSimbolos = new Manejador_Tabla_Simbolos();
     public ArrayList<Simbolo> listaSimbolos = new ArrayList<>();
-    public int cantidadElementos = 0;
     public int index = 0;
 
-    /**** Tercetos ***/
+    /**** Tercetos ****/
     public ArrayList<Tercetos> listaDeTercetos = new ArrayList<>();
-    public IntermediateCodeGenerator intermediateCode = new IntermediateCodeGenerator(listaDeTercetos);
-    public ManejadorTercetos manejador_Tercetos = new ManejadorTercetos();
-    Map<Integer, String> mapaTiposTercetos = new HashMap<>();
-    public Stack<Integer> finDeSentenceListStack = new Stack<>();
-    public int indexTerceto = 1;
-    public int indexTercetoInicial;
-    public int contGetPenUlt = 0;
-    String operadorContrario = "";
-    public int terceto_salto = 0;
-
-    public Stack<String> factorStack = new Stack<>();
-    public Stack<String> conditionsStack = new Stack<>();
     public Stack<Integer> tercetoStack = new Stack<>();
     public Stack<Integer> numerosDeTercetosStack = new Stack<>();
-    public int nro_label = 1;
-    public boolean isIfElse = false;
-    public int tercetoConditional;
-    public boolean isIf = false;
 
+    public IntermediateCodeGenerator intermediateCode = new IntermediateCodeGenerator(listaDeTercetos);
+    public ManejadorTercetos manejador_Tercetos = new ManejadorTercetos();
     
-    public boolean isWhile = false;
-
-    public String montoDescuento;
-    public int indiceDescuento;
-    public int cont_cantidad_variables;
-    public boolean flagOneSentence = false;
-
-    List<String> elementosDesapilados = new ArrayList<>();
-    public int lastCondition;
-
-    public void imprimirMapaTiposTercetos(Map<Integer, String> mapaTiposTercetos) {
-    System.out.println("Contenido del mapa de tipos de tercetos:");
-    for (Map.Entry<Integer, String> entry : mapaTiposTercetos.entrySet()) {
-        System.out.println("Terceto " + entry.getKey() + " -> Tipo: " + entry.getValue());
-    }
-}
+    Map<Integer, String> mapaTiposTercetos = new HashMap<>();
+    public int indexTerceto = 1;
+    public int indexTercetoInicial;
+    String operadorContrario = "";
+    public int terceto_salto = 0;
 :}
 
 parser code
@@ -89,7 +110,6 @@ terminal CLOSE_BRACE;
 terminal IDENTIFIER;
 terminal IF;
 terminal ELSE;
-terminal ELSEIF;
 terminal AND;
 terminal OR;
 terminal NOT;
@@ -125,9 +145,7 @@ non terminal term;
 non terminal factor;
 non terminal sentence_list;
 non terminal condicional;
-non terminal elseif_clauses;
 non terminal relational_op;
-non terminal elseif_clauses_optional;
 non terminal declaration;
 non terminal declaration_list;
 non terminal type;
@@ -205,11 +223,11 @@ assignment ::= IDENTIFIER:id ASSIG expression:e
 {:
     System.out.println("Asignación a variable: " + id);
 
-    // Crear el terceto de asignación
+
     int indice = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
     action_obj.manejador_Tercetos.crearNuevoTerceto(indice, ":=", "[" + action_obj.manejador_Tercetos.obtenerIndice("expression") + "]", id.toString());
     System.out.println("Indice expresion:" + action_obj.manejador_Tercetos.obtenerIndice("expression"));
-    // Validar la compatibilidad de tipos utilizando el terceto
+   
     Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
     
     if (existingSymbol == null) {
@@ -452,13 +470,10 @@ condicional ::= OPEN_PAREN simple_condicion CLOSE_PAREN
 
 simple_condicion ::= factor:f1 relational_op:r_op factor:f2
 {:
-    // Obtener los índices de los tercetos desde la pila
-    int indiceFactor2 = tercetoStack.pop(); // Segundo factor (f2)
-    int indiceFactor1 = tercetoStack.pop(); // Primer factor (f1)
+    
+    int indiceFactor2 = tercetoStack.pop(); 
+    int indiceFactor1 = tercetoStack.pop(); 
 
-    System.out.println(indiceFactor1);
-    System.out.println(indiceFactor2);
-    // Obtener los tipos de datos desde el mapa de tercetos en lugar de usar símbolos directamente
     String tipoFactor1 = mapaTiposTercetos.get(indiceFactor1);
     String tipoFactor2 = mapaTiposTercetos.get(indiceFactor2);
 
@@ -473,26 +488,17 @@ simple_condicion ::= factor:f1 relational_op:r_op factor:f2
 
     System.out.println("Condición simple con tipos compatibles: " + tipoFactor1 + " y " + tipoFactor2);
 
-    // Crear el terceto de comparación CMP
+    
     int indiceComparacion = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
     action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "[" + indiceFactor1 + "]", "[" + indiceFactor2 + "]");
-
-    // Asignar el tipo booleano al terceto de comparación (resultado es booleano)
     mapaTiposTercetos.put(indiceComparacion, "bool");
-
-    // Incrementar el índice del terceto
     indexTerceto++;
 
     action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, operadorContrario, "_", "_");
-    System.out.println("Bucle While" + indexTerceto);
-    // Guardar el número del terceto de salto en la pila
     numerosDeTercetosStack.push(indexTerceto);
-
-    // Incrementar el índice del terceto
     indexTerceto++;
-
-    // Establecer el resultado como booleano ya que la condición es booleana
-    RESULT = new Simbolo("", "bool", "", null);
+    
+    System.out.println("Bucle While" + indexTerceto);
 :};
 
 
@@ -575,18 +581,28 @@ condicional OPEN_BRACE sentence_list CLOSE_BRACE
 
 /******** TEMAS COMUNES: Entrada y salida  ********/
 
-sentence ::= READ OPEN_PAREN variable CLOSE_PAREN
+sentence ::= READ OPEN_PAREN variable:id CLOSE_PAREN
 {: 
     System.out.println("Función Leer");
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"READ" ,  id.toString(),"_"));
+    indexTerceto++;
 :};
 
-sentence ::= WRITE OPEN_PAREN variable CLOSE_PAREN
+sentence ::= WRITE OPEN_PAREN variable:id CLOSE_PAREN
 {: 
     System.out.println("Funcion Escribir");
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" , id.toString() ,"_"));
+    indexTerceto++;
 :}
-| WRITE OPEN_PAREN STRING_CONSTANT CLOSE_PAREN
+| WRITE OPEN_PAREN STRING_CONSTANT:s CLOSE_PAREN
 {:
     System.out.println("Funcion Escribir");
+
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, s.toString(), "_","_"));
+    indexTerceto++;
+
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" , "[" +Integer.toString(indexTerceto -1) +"]" ,"_"));
+    indexTerceto++;
 :};
 
 variable ::= IDENTIFIER:id
@@ -594,6 +610,7 @@ variable ::= IDENTIFIER:id
     if (!action_obj.manejadorTablaSimbolos.containsSymbol(id.toString())) {
         throw new RuntimeException("La variable '" + id.toString() + "' no esta inicializada.");
     }
+    RESULT=id;
 :};
 
 /******** TEMAS ESPECIALES: getPenultimatePosition  ********/

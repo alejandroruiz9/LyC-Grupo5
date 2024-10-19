@@ -21,10 +21,8 @@ init {
 *- PRUEBAS DE ASIGNACIONES -*
 
 
-while (varInt1 < 10 AND varInt1 > 10) {
-    while (varInt1 ==3 OR varInt1 > 10) {
-        var1:=2
-    }
-    var1:=4
-}
+
+escribir("hola")
+escribir(var5)
+leer(var5)
 

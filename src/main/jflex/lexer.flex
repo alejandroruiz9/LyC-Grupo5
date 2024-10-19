@@ -40,7 +40,6 @@ Assig = ":="
 if = "if"
 si = "si"
 sino = "sino"
-elseif = "elseif"
 else = "else"
 and = "AND"
 or = "OR"
@@ -111,7 +110,6 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {semicolon}                               { return symbol(ParserSym.SEMICOLON); }
   {if}                                     { return symbol(ParserSym.IF); }
   {si}                                     { return symbol(ParserSym.IF); }
-  {elseif}                                 { return symbol(ParserSym.ELSEIF); }
   {sino}                                 { return symbol(ParserSym.ELSE); }
   {else}                                   { return symbol(ParserSym.ELSE); }
   {and}                                    { return symbol(ParserSym.AND); }
