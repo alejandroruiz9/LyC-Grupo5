@@ -25,13 +25,18 @@ public class Simbolo {
     public String getTipoDato() {
 
         if(tipoDato=="CTE_INTEGER")
-            return "Int;";
+            return "Int";
         else if(tipoDato=="CTE_FLOAT")
             return "Float";
         else if(tipoDato=="CTE_STRING")
             return "String";
         else
             return tipoDato;
+    }
+
+    public String getTipoDatoImprimir() {
+
+        return tipoDato;
     }
 
     public void setTipoDato(String tipoDato) {

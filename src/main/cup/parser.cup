@@ -81,6 +81,19 @@ action code
     public int indexTercetoInicial;
     String operadorContrario = "";
     public int terceto_salto = 0;
+
+    public String invertirOperador(String operador) {
+    switch (operador) {
+        case "BGE": return "BLT";  // Mayor o igual -> Menor
+        case "BLE": return "BGT";  // Menor o igual -> Mayor
+        case "BGT": return "BLE";  // Mayor -> Menor o igual
+        case "BLT": return "BGE";  // Menor -> Mayor o igual
+        case "BEQ": return "BNE";  // Igual -> No igual
+        case "BNE": return "BEQ";  // No igual -> Igual
+        default: throw new RuntimeException("Operador no válido para inversión: " + operador);
+    }
+    
+}
 :}
 
 parser code
@@ -297,7 +310,6 @@ expression ::= expression:e1 PLUS term:e2
     System.out.println("Expression = Term");
 
     action_obj.manejador_Tercetos.apuntarAOtroIndice("expression", "term");
-    System.out.println("Indice term:" + action_obj.manejador_Tercetos.obtenerIndice("term"));
     RESULT = e;
 :}
 | getPenultimatePosition_expr:e 
@@ -309,7 +321,6 @@ expression ::= expression:e1 PLUS term:e2
 | binary_count_expr:e 
 {:
     action_obj.manejador_Tercetos.apuntarAOtroIndice("expression", "binary_count_expr");
-    System.out.println("holaa3");
     RESULT = e;
 :};
 
@@ -339,8 +350,6 @@ term ::= term:t MULT factor:f
     // Crear el terceto de división
     action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, "/", "[" + action_obj.manejador_Tercetos.obtenerIndice("term") + "]", "[" + action_obj.manejador_Tercetos.obtenerIndice("factor") + "]"));
     
-    System.out.println(action_obj.manejador_Tercetos.obtenerTerceto(indexTerceto).toString() ); 
-    System.out.println(action_obj.manejador_Tercetos.obtenerIndice("term") ); 
     // Validar los tipos de los operandos
     String tipoT = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("term"));
     String tipoF = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("factor"));
@@ -359,7 +368,6 @@ term ::= term:t MULT factor:f
 {:
 
     action_obj.manejador_Tercetos.apuntarAOtroIndice("term", "factor");
-    System.out.println("Indice factor:" + action_obj.manejador_Tercetos.obtenerIndice("factor"));
     RESULT = f;
 :};
 
@@ -463,8 +471,6 @@ ELSE OPEN_BRACE sentence_list CLOSE_BRACE
 /******** TEMAS COMUNES: Condiciones  ********/
 condicional ::= OPEN_PAREN simple_condicion CLOSE_PAREN
 {: System.out.println("Condicional simple"); :}
-| OPEN_PAREN NOT simple_condicion CLOSE_PAREN
-{: System.out.println("Condicional NOT"); :}
 | OPEN_PAREN multiple_condicion CLOSE_PAREN
 {: System.out.println("Condicional múltiple"); :};
 
@@ -494,12 +500,52 @@ simple_condicion ::= factor:f1 relational_op:r_op factor:f2
     mapaTiposTercetos.put(indiceComparacion, "bool");
     indexTerceto++;
 
+
     action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, operadorContrario, "_", "_");
     numerosDeTercetosStack.push(indexTerceto);
     indexTerceto++;
     
     System.out.println("Bucle While" + indexTerceto);
 :};
+
+simple_condicion ::= NOT factor:f1 relational_op:r_op factor:f2
+{:
+    
+    int indiceFactor2 = tercetoStack.pop(); 
+    int indiceFactor1 = tercetoStack.pop(); 
+
+    String tipoFactor1 = mapaTiposTercetos.get(indiceFactor1);
+    String tipoFactor2 = mapaTiposTercetos.get(indiceFactor2);
+
+    // Verificar si los tipos de datos son compatibles
+    if (tipoFactor1 == null || tipoFactor2 == null) {
+        throw new RuntimeException("Error: Uno de los tipos de los factores no está definido.");
+    }
+
+    if (!tipoFactor1.equals(tipoFactor2)) {
+        throw new RuntimeException("Type mismatch: No se puede comparar un " + tipoFactor1 + " con un " + tipoFactor2);
+    }
+
+    System.out.println("Condición simple con tipos compatibles: " + tipoFactor1 + " y " + tipoFactor2);
+
+    
+    int indiceComparacion = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "[" + indiceFactor1 + "]", "[" + indiceFactor2 + "]");
+    mapaTiposTercetos.put(indiceComparacion, "bool");
+    indexTerceto++;
+
+    
+    operadorContrario = invertirOperador(operadorContrario);
+
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, operadorContrario, "_", "_");
+    numerosDeTercetosStack.push(indexTerceto);
+    indexTerceto++;
+    
+    System.out.println("Bucle While" + indexTerceto);
+:};
+
+
+
 
 
 multiple_condicion ::= simple_condicion AND simple_condicion
@@ -566,7 +612,6 @@ condicional OPEN_BRACE sentence_list CLOSE_BRACE
 {: 
     System.out.println("Bucle While");
     int nroTercetoDesapilado= numerosDeTercetosStack.pop();
-    System.out.println("Operador"+ nroTercetoDesapilado);
     action_obj.manejador_Tercetos.modificarTerceto(nroTercetoDesapilado, 2 ,"[" + Integer.toString(indexTerceto +1) +"]");
 
 

@@ -19,7 +19,7 @@ public class SymbolTableGenerator implements FileGenerator{
     public void generate(FileWriter fileWriter) throws IOException {
         fileWriter.write("NOMBRE | TIPODATO | VALOR | LONGITUD \n");
         for (Simbolo symbol : symbolTable) {
-            fileWriter.write(symbol.getNombre() + " | " + symbol.getTipoDato() + " | " + symbol.getValor() + " | " + Objects.toString(symbol.getLongitud(), "") + "\n");
+            fileWriter.write(symbol.getNombre() + " | " + symbol.getTipoDatoImprimir() + " | " + symbol.getValor() + " | " + Objects.toString(symbol.getLongitud(), "") + "\n");
         }
     }
 }

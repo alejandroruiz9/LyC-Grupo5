@@ -30,13 +30,6 @@ public class Manejador_Tabla_Simbolos {
 
     }
 
-    public void writeToFile(FileWriter fileWriter) throws IOException {
-        
-        for (Simbolo symbol : tablaSimbolos) {
-            fileWriter.write(symbol.getNombre() + " | " + symbol.getTipoDato() + " | " + symbol.getValor() + " | " + symbol.getLongitud() + "\n");
-        }
-    }
-
     public ArrayList<Simbolo> getTablaSimbolos() {
         return tablaSimbolos;
     }
