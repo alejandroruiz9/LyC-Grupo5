@@ -53,6 +53,11 @@ if (varFloat1 <= 10.0 AND NOT varFloat2 <= 10.0) {
 } else {
     varFloat2 := varFloat1 / 2.0  *- Condición con else y asignación -*
 }
+if (varFloat1 <= 10.0 AND varFloat2 <= 10.0) {
+    varFloat2 := varFloat1 * 1.1
+} else {
+    varFloat2 := varFloat1 / 2.0  *- Condición con else y asignación -*
+}
 
 if (varString1 == "Hello" OR varString1 == "Hola" ) {
     varString2 := "World"
@@ -86,9 +91,6 @@ while (varInt1 < 10) {
 *-varString1 := 123  *- Error: Asignación de entero a variable de cadena -*
 *-varInt1 := varString1 + 5  *- Error: Operación aritmética entre cadena y entero -*
 *-varFloat1 := varInt1 * "Hello"  *- Error: Operación aritmética entre entero y cadena -*
-*-varInt1 := getPenultimatePosition(0; [5.5, 10.1, 20.3])  *- Error: Pivote fuera de rango en getPenultimatePosition -*
-*-varFloat1 := getPenultimatePosition(5; [3, 8.2, 2])  *- Error: Pivote fuera de rango en getPenultimatePosition -*
-*-varInt1 := binaryCount([110, 1.1, 0, 5, "Hello"])  *- Error: Elemento en lista de binaryCount no válido -*
 *-if (varString1 > 10) {
 *-    varString2 := "Error"
 *-}  *- Error: Comparación no válida entre cadena y entero -*

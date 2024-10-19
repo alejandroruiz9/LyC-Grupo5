@@ -239,8 +239,7 @@ assignment ::= IDENTIFIER:id ASSIG expression:e
 
     int indice = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
     action_obj.manejador_Tercetos.crearNuevoTerceto(indice, ":=", "[" + action_obj.manejador_Tercetos.obtenerIndice("expression") + "]", id.toString());
-    System.out.println("Indice expresion:" + action_obj.manejador_Tercetos.obtenerIndice("expression"));
-   
+    
     Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
     
     if (existingSymbol == null) {
