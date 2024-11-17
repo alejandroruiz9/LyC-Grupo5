@@ -68,6 +68,7 @@ Int = "Int"
 String = "String"
 Comentarios = "*-" ~ "-*"
 write = "escribir"
+writeln = "escribirln"
 read = "leer"
 while = "while"
 init="init"
@@ -139,6 +140,7 @@ Identifier = {Letter} ({Letter}|{Digit})*
   {or}                                     { return symbol(ParserSym.OR); }
   {not}                                    { return symbol(ParserSym.NOT); }
   {write}                                     { return symbol(ParserSym.WRITE); }
+  {writeln}                                     { return symbol(ParserSym.WRITELN); }
   {read}                                    { return symbol(ParserSym.READ); }
   {while}                                    { return symbol(ParserSym.WHILE); }
   {Float}                                   { return symbol(ParserSym.FLOAT); }

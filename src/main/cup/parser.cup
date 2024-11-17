@@ -68,6 +68,10 @@ action code
     public Manejador_Tabla_Simbolos manejadorTablaSimbolos = new Manejador_Tabla_Simbolos();
     public ArrayList<Simbolo> listaSimbolos = new ArrayList<>();
     public int index = 0;
+    // HashMap para asociar constantes String con nombres únicos
+    HashMap<String, String> mapaConstantesString = new HashMap<>();
+    int contadorString = 1;
+
 
     /**** Tercetos ****/
     public ArrayList<Tercetos> listaDeTercetos = new ArrayList<>();
@@ -95,7 +99,7 @@ action code
     }
 }
     /**** Assembler ****/
-    public ManejadorAssembler manAsm = new ManejadorAssembler(manejadorTablaSimbolos.getTablaSimbolos(), manejador_Tercetos.getIntermediateCode());
+    public ManejadorAssembler manAsm = new ManejadorAssembler(manejadorTablaSimbolos.getTablaSimbolos(), manejador_Tercetos.getIntermediateCode(),mapaConstantesString);
 
 
 :}
@@ -143,6 +147,7 @@ terminal FLOAT_CONSTANT;
 terminal INTEGER_CONSTANT;
 terminal STRING_CONSTANT;
 terminal WRITE;
+terminal WRITELN;
 terminal READ;
 terminal WHILE;
 terminal INIT;
@@ -214,6 +219,12 @@ variable_names ::= variable_names COMMA name_init:type_spec
 
 name_init ::= IDENTIFIER:id
 {:
+    // Verificar si la variable ya está en la tabla de símbolos
+    if (action_obj.manejadorTablaSimbolos.containsSymbol(id.toString())) {
+        throw new RuntimeException("Error: La variable '" + id.toString() + "' ya está declarada.");
+    }
+
+    // Crear y agregar la nueva variable
     Simbolo symbol = new Simbolo(id.toString(), "", "", null);
     this.listaSimbolos.add(symbol);
     System.out.println("Se inicializó la variable: " + id.toString());
@@ -432,16 +443,30 @@ factor ::= INTEGER_CONSTANT:constant
 
 factor ::= STRING_CONSTANT:constant 
 {:
-    Simbolo symbol = new Simbolo("_" + constant.toString().replace(" ", "_"), "CTE_STRING", constant.toString(), constant.toString().length());
+    // Generar un identificador único para la constante
+    String nombreConstante;
+    if (!mapaConstantesString.containsKey(constant.toString())) {
+        nombreConstante = "_str_" + contadorString++;
+        mapaConstantesString.put(constant.toString(), nombreConstante);
+    } else {
+        nombreConstante = mapaConstantesString.get(constant.toString());
+    }
+
+    // Crear el símbolo
+    Simbolo symbol = new Simbolo(nombreConstante, "CTE_STRING", constant.toString(), constant.toString().length());
+
+    // Agregar el símbolo a la tabla si no existe
     if (!action_obj.manejadorTablaSimbolos.containsSymbol(symbol.getNombre())) {
         action_obj.manejadorTablaSimbolos.addSymbol(symbol);
     }
 
-    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, constant.toString(), "_", "_"));
+    // Crear el terceto
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, nombreConstante, "_", "_"));
     action_obj.manejador_Tercetos.agregarIndice("factor", indexTerceto);
     mapaTiposTercetos.put(indexTerceto, "String");
     tercetoStack.push(indexTerceto);
     indexTerceto++;
+
     RESULT = symbol;
 :};
 factor ::= OPEN_PAREN expression:e CLOSE_PAREN {: RESULT = e; System.out.println("Factor = (Expression)"); :};
@@ -651,14 +676,63 @@ sentence ::= WRITE OPEN_PAREN variable:id CLOSE_PAREN
 {:
     System.out.println("Funcion Escribir String");
 
-    Simbolo symbol = new Simbolo("_" + constant.toString().replace(" ", "_").replace("\"", ""), "CTE_STRING", constant.toString(), constant.toString().length());
+ // Generar un identificador único para la constante
+    String nombreConstante;
+    if (!mapaConstantesString.containsKey(constant.toString())) {
+        nombreConstante = "_str_" + contadorString++;
+        mapaConstantesString.put(constant.toString(), nombreConstante);
+    } else {
+        nombreConstante = mapaConstantesString.get(constant.toString());
+    }
+
+    // Crear el símbolo
+    Simbolo symbol = new Simbolo(nombreConstante, "CTE_STRING", constant.toString(), constant.toString().length());
+
+    // Agregar el símbolo a la tabla si no existe
     if (!action_obj.manejadorTablaSimbolos.containsSymbol(symbol.getNombre())) {
         action_obj.manejadorTablaSimbolos.addSymbol(symbol);
     }
 
-    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" , constant.toString().replace(" ", "_").replace("\"", "") ,"_"));
+    // Crear el terceto
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" ,nombreConstante, "_"));
+ 
     indexTerceto++;
 :};
+
+sentence ::= WRITELN OPEN_PAREN variable:id CLOSE_PAREN
+{: 
+    System.out.println("Funcion Escribir");
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITELN" , id.toString() ,"_"));
+    indexTerceto++;
+:}
+| WRITELN OPEN_PAREN STRING_CONSTANT:constant CLOSE_PAREN
+{:
+    System.out.println("Funcion Escribir String");
+
+ // Generar un identificador único para la constante
+    String nombreConstante;
+    if (!mapaConstantesString.containsKey(constant.toString())) {
+        nombreConstante = "_str_" + contadorString++;
+        mapaConstantesString.put(constant.toString(), nombreConstante);
+    } else {
+        nombreConstante = mapaConstantesString.get(constant.toString());
+    }
+
+    // Crear el símbolo
+    Simbolo symbol = new Simbolo(nombreConstante, "CTE_STRING", constant.toString(), constant.toString().length());
+
+    // Agregar el símbolo a la tabla si no existe
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol(symbol.getNombre())) {
+        action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    }
+
+    // Crear el terceto
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITELN" ,nombreConstante, "_"));
+ 
+    indexTerceto++;
+:};
+
+
 
 variable ::= IDENTIFIER:id
 {: 
@@ -736,7 +810,7 @@ binary_count_expr ::= BINARYCOUNT
     }
 
     if (!action_obj.manejadorTablaSimbolos.containsSymbol("_1")) {
-        action_obj.manejadorTablaSimbolos.addSymbol(new Simbolo("_10", "CTE_INTEGER","10", null));
+        action_obj.manejadorTablaSimbolos.addSymbol(new Simbolo("_1", "CTE_INTEGER","1", null));
     }
 
     if (!action_obj.manejadorTablaSimbolos.containsSymbol("_0")) {

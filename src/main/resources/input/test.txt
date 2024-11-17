@@ -1,27 +1,131 @@
-*- PRUEBAS DE DECLARACIÓN DE VARIABLES -*
-
+*- Declaración de variables -*
 init {
-    varInt1, varInt2 : Int  *- Declaración de variables enteras -*
+    varInt1, varInt2 : Int
 }
-
 init {
-    varFloat1, varFloat2 : Float  *- Declaración de variables flotantes -*
+    varFloat1, varFloat2 : Float
 }
-
 init {
-    varString1, varString2 : String  *- Declaración de variables de cadena -*
+    varString1, varString2 : String
 }
-
 init {
     var1, var2 : Int
     var3, var4 : Float
-    var5, var6 : String  *- Declaración mixta de variables -*
+    var5, var6 : String
+}
+escribir("Escriba un valor para VarInt1:")
+*- Asignación de valores -*
+leer(varInt1)
+
+escribir("Valor de varInt1: ")
+escribirln(varInt1)
+
+
+
+
+varInt2 := varInt1 + 20
+escribir("Sumando 20 a varInt1 y asignando a ")
+escribirln("varInt2.")
+escribir("Valor de varInt2: ")
+escribirln(varInt2)
+varFloat1 := 3.14
+escribirln("Asignando 3.14 a varFloat1.")
+escribir("Valor de varFloat1: ")
+escribirln(varFloat1)
+
+varFloat2 := varFloat1 * 2.5
+escribirln("Multiplicando varFloat1 por 2.5.")
+escribir("Resultado: ")
+escribirln(varFloat2)
+
+varInt1 := varInt2 - 3
+escribir("Restando 3 a varInt2 y asignando a")
+escribirln(" varInt1.")
+escribir("Valor de varInt1: ")
+escribirln(varInt1)
+
+escribir("Escriba un valor para varFloat2: ")
+leer(varFloat2)
+varFloat1 := varFloat2 / 1.5
+escribirln("Dividiendo varFloat2 por 1.5.")
+escribir("Resultado: ")
+escribirln(varFloat1)
+
+varInt1 := varInt2 + varInt1 - 3
+escribirln("Sumando varInt2 y varInt1, restando 3.")
+escribir("Resultado: ")
+escribirln(varInt1)
+
+varFloat1 := varFloat2 * 2.5 / 1.5
+escribir("Multiplicando varFloat2 por 2.5 y")
+escribirln(" dividiendo por 1.5.")
+escribir("Resultado: ")
+escribirln(varFloat1)
+
+
+escribir("Escriba un valor para varInt2: ")
+escribir("Lo evaluaremos en binarycount: ")
+leer(varInt2)
+*- Funciones especiales -*
+varInt1 := binaryCount([110, varInt1, 0, varInt2, 10101])
+escribirln("Llamando a binaryCount con valores:")
+escribirln("[110, varInt1, 0, varInt2, 10101].")
+escribir("Cantidad de numeros binarios: ")
+escribirln(varInt1)
+
+varInt1 := getPenultimatePosition(3; [3, 8.2, 2, 55.5, 7, 252])
+escribirln("Llamando a getPenultimatePosition.")
+escribirln("Indice 3 en [3, 8.2, 2, 55.5, 7, 252].")
+escribir("Valor devuelto: ")
+escribirln(varInt1)
+
+
+*- Condicionales -*
+escribir("Escriba un valor para varInt1: ")
+leer(varInt1)
+escribirln("Evaluando condiciones:")
+if (NOT varInt1 > 0) {
+    escribirln("varInt1 no es mayor que 0.")
+    if(varInt2 > 0){
+        escribirln("varInt2 no es mayor que 0.")
+    }
+} else {
+    escribirln("varInt1 es mayor que 0.")
 }
 
-*- PRUEBAS DE ASIGNACIONES -*
+escribir("Escriba un valor para varFloat1: ")
+leer(varFloat1)
+escribir("Escriba un valor para varFloat2: ")
+leer(varFloat2)
+if (varFloat1 < 10.0 AND varFloat2 < 10.0) {
+    escribirln("VarFloat1 y VarFloat2 son menores a 10")
+} else {
+    escribirln("VarFloat1 o VarFloat2 no es menor a 10")
+}
 
-varInt2 := 111  *- Asignación de constantes enteras -*
-varInt1 := binaryCount([1,11110,0,9811,1281,11,varInt2])
+if (varFloat1 < 10.0 OR varFloat2 < 10.0) {
+    escribirln("VarFloat1 o VarFloat2 son menores a 10")
+} else {
+    escribirln("VarFloat1 y VarFloat2 no es menor a 10")
+}
 
+*- Bucles -*
+escribirln("Iniciando bucle while con varInt1.")
+varInt1 := 8
+while (varInt1 < 10) {
 
-escribir(varInt1)
+    if(varInt1 == 9){
+        escribirln("En este momento varInt1 vale 9")
+    }
+    escribirln("Incrementando varInt1 en el bucle:")
+    varInt1 := varInt1 + 1
+}
+
+escribirln("Iniciando bucle while con varFloat1.")
+varFloat1 := 3.0
+while (varFloat1 >= 1.0) {
+    varFloat1 := varFloat1 - 0.5
+    escribirln("Decrementando varFloat1 en el bucle:")
+}
+
+escribirln("Gracias por probar el compilador.")

@@ -14,17 +14,21 @@ public class Manejador_Tabla_Simbolos {
     }
 
     public void addVariablesFromArrayList(ArrayList<Simbolo> simbolos, String tipoDato) {
-
-
         for (Simbolo elemento : simbolos) {
             try {
-                if (!tablaSimbolos.contains(elemento)){
-                    elemento.setTipoDato(tipoDato);
-                    tablaSimbolos.add(elemento);
+                if (containsSymbol(elemento.getNombre())) {
+                    throw new RuntimeException("La variable '" + elemento.getNombre() + "' ya está declarada.");
                 }
-
+    
+                elemento.setTipoDato(tipoDato);
+                tablaSimbolos.add(elemento);
+                System.out.println("Variable agregada a la tabla: " + elemento.getNombre() + " de tipo " + tipoDato);
+    
+            } catch (RuntimeException e) {
+                // Caso en que la variable ya está declarada
+                System.err.println("Error: " + e.getMessage());
             } catch (Exception e) {
-                System.out.println("Error al procesar el símbolo: " + e.getMessage());
+                System.err.println("Error al procesar el símbolo: " + e.getMessage());
             }
         }
     }
