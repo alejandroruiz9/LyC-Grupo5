@@ -5,6 +5,9 @@ import lyc.compiler.tabla_simbolos.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
+import java_cup.runtime.Symbol;
+
 import java.util.HashMap;
 
 
@@ -100,15 +103,40 @@ public class ManejadorAssembler {
                 continue;
             }
         }
+        asmInstructions.add("truncMode DW 0F7FFH ");
         asmInstructions.add("");
-
     }
     private void generateTercetosCode() {
         Stack<String> operandos  = new Stack<String>();
         asmInstructions.add(".CODE");
+
+        asmInstructions.add("MODULO PROC");             
+        asmInstructions.add("\tFSTP @divisor");             
+        asmInstructions.add("\tFSTP @remainder");             
+        asmInstructions.add("\tMODULO_LOOP:");      
+        asmInstructions.add("\t\tFLD @remainder");             
+        asmInstructions.add("\t\tFLD @divisor");               
+        asmInstructions.add("\t\tFXCH");                      
+        asmInstructions.add("\t\tFCOMP");                     
+        asmInstructions.add("\t\tFSTSW AX");                  
+        asmInstructions.add("\t\tSAHF");                      
+        asmInstructions.add("\t\tJB MODULO_DONE");            
+        asmInstructions.add("\t\tFLD @remainder");             
+        asmInstructions.add("\t\tFLD @divisor");               
+        asmInstructions.add("\t\tFSUB");                      
+        asmInstructions.add("\t\tFSTP @remainder");            
+        asmInstructions.add("\t\tJMP MODULO_LOOP");           
+
+        asmInstructions.add("MODULO_DONE:");                
+        asmInstructions.add("\tFLD @remainder");
+        asmInstructions.add("\tRET");                       
+        asmInstructions.add("MODULO ENDP");
+ 
+
         asmInstructions.add("START:");
         asmInstructions.add("\tmov AX, @DATA");
         asmInstructions.add("\tmov DS, AX");
+        asmInstructions.add("fldcw truncMode");
         asmInstructions.add("");
         int tercetoIndex = 1;
         for (Tercetos terceto : tercetos) {
@@ -155,8 +183,14 @@ public class ManejadorAssembler {
                         else{ 
                             int indiceTarget= Integer.parseInt(operando1.replace("[", "").replace("]", ""));
                             if(terceto.getIndice()- indiceTarget > 1){
-                                    asmInstructions.add("\tFLD _" + tercetos.get(indiceTarget -1 ).getOperador());
+                                if (tercetos.get(indiceTarget -1 ).getOperador().matches("[0-9]+(\\.[0-9]+)?")) {
+                                    asmInstructions.add("\tFLD _" + tercetos.get(indiceTarget -1 ).getOperador().replace(".", "x"));
+                                } else if(!terceto.getOperador().contains("\"") && !terceto.getOperador().contains(".")){
+                                    asmInstructions.add("\tFLD " + tercetos.get(indiceTarget -1 ).getOperador());
+                                } 
+
                             }
+                            
                         }
                         
                         asmInstructions.add("\tFSTP " + operando2);
@@ -281,8 +315,21 @@ public class ManejadorAssembler {
 
                         break;
                     case "/":
-
+                    if(!operando1.contains("[")){
+                        if(operando1.contains("@"))
+                            asmInstructions.add("\tFLD " + operando1);
+                        else
+                        asmInstructions.add("\tFLD _" + operando1);
+                    }
+                    if(!operando2.contains("[")){
+                        if(operando2.contains("@"))
+                            asmInstructions.add("\tFLD " + operando2);
+                        else
+                        asmInstructions.add("\tFLD _" + operando2);
+                    }
                         asmInstructions.add("\tFDIV ");
+                        
+                        asmInstructions.add("\tfrndint ");
                         break;
                     case "%":
                         if(!operando1.contains("[")){
@@ -297,11 +344,9 @@ public class ManejadorAssembler {
                             else
                             asmInstructions.add("\tFLD _" + operando2);
                         }
-                        asmInstructions.add("\tfdiv");             
-                        asmInstructions.add("\tfld st");           
-                        asmInstructions.add("\tfrndint");          
-                        asmInstructions.add("\tfmul st(0), st(2)");
-                        asmInstructions.add("\tfsub");
+                        asmInstructions.add("\tCALL MODULO");
+
+
                     break;
                     case "READ":
                         // manejar caso READ
@@ -318,13 +363,9 @@ public class ManejadorAssembler {
                         break;
                     // Otros operadores
                     default:
-                        if (terceto.getOperador().equals("terceto")) {
-                            asmInstructions.add("\tFLD " + terceto.getOperando1());
-                            asmInstructions.add("\tFSTP @aux" + terceto.getIndice());
-                        } else if (terceto.getOperador().matches("[0-9]+(\\.[0-9]+)?")) {
+                        if (terceto.getOperador().matches("[0-9]+(\\.[0-9]+)?")) {
                             asmInstructions.add("\tFLD _" + terceto.getOperador().replace(".", "x"));
                         } else if(!terceto.getOperador().contains("\"") && !terceto.getOperador().contains(".")){
-                            // Asumimos que es una variable
                             asmInstructions.add("\tFLD " + terceto.getOperador());
                         }
                         operandos.add(operador);
@@ -335,16 +376,14 @@ public class ManejadorAssembler {
                 }
             
         }
+
         asmInstructions.add("\tFINAL_LABEL:");
         asmInstructions.add("\tMOV AX, 4C00h");
         asmInstructions.add("\tINT 21h");
         asmInstructions.add("END START");
+
     }
-    // public void printAsmInstructions() {
-    //     for (String instruction : asmInstructions) {
-    //         System.out.println(instruction);
-    //     }
-    // }
+
     public String getSymbolType(String symbolName) {
         for (Simbolo symbol : tabla_simbolos) {
             if (symbol.getNombre().equals(symbolName)) {

@@ -20,8 +20,8 @@ init {
 
 *- PRUEBAS DE ASIGNACIONES -*
 
-varInt1 := 2  *- Asignación de constantes enteras -*
-varInt1 := binaryCount([110, 0, 0, 1, 10101])
+varInt2 := 111  *- Asignación de constantes enteras -*
+varInt1 := binaryCount([1,11110,0,9811,1281,11,varInt2])
 
 
 escribir(varInt1)

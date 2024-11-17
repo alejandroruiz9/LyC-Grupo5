@@ -727,6 +727,22 @@ binary_count_expr ::= BINARYCOUNT
     indexTerceto++;
 
     manejadorTablaSimbolos.addSymbol(new Simbolo("@digito", "Int", "", null));
+    manejadorTablaSimbolos.addSymbol(new Simbolo("@divisor", "Int", "", null));
+    manejadorTablaSimbolos.addSymbol(new Simbolo("@remainder", "Int", "", null));
+
+
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol("_10")) {
+        action_obj.manejadorTablaSimbolos.addSymbol(new Simbolo("_10", "CTE_INTEGER","10", null));
+    }
+
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol("_1")) {
+        action_obj.manejadorTablaSimbolos.addSymbol(new Simbolo("_10", "CTE_INTEGER","10", null));
+    }
+
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol("_0")) {
+        action_obj.manejadorTablaSimbolos.addSymbol(new Simbolo("_0", "CTE_INTEGER","0", null));
+    }
+
     manejadorTablaSimbolos.addSymbol(new Simbolo("@num", "Int", "", null));
     manejadorTablaSimbolos.addSymbol(new Simbolo("@contador", "Int", "", null));
     manejadorTablaSimbolos.addSymbol(new Simbolo("@resultado", "Int", "", null));
@@ -749,13 +765,13 @@ binary_count_expr ::= BINARYCOUNT
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@digito", "1");
         indexTerceto++;
         
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 4) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BEQ", "[" + (indexTerceto + 4) + "]", "_");
         indexTerceto++;
 
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@digito", "0");
         indexTerceto++;
 
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 2) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BEQ", "[" + (indexTerceto + 2) + "]", "_");
         indexTerceto++;
 
         
@@ -769,7 +785,7 @@ binary_count_expr ::= BINARYCOUNT
         indexTerceto++;
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@num", "0");
         indexTerceto++;
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 9) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BEQ", "[" + (indexTerceto + 9) + "]", "_");
         indexTerceto++;
         // Iteración para verificar todos los dígitos
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "%", "@num", "10");
@@ -780,17 +796,17 @@ binary_count_expr ::= BINARYCOUNT
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@digito", "1");
         indexTerceto++;
         
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 4) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BEQ", "[" + (indexTerceto + 4) + "]", "_");
         indexTerceto++;
 
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@digito", "0");
         indexTerceto++;
 
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 2) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BEQ", "[" + (indexTerceto + 2) + "]", "_");
         indexTerceto++;
         
         numerosDeTercetosStack.push(indexTerceto);
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "[" + (indexTerceto + 3) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "[" + (indexTerceto + 6) + "]", "_");
         indexTerceto++;
 
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI","[" + (indexTerceto - 11) + "]", "_");
@@ -803,12 +819,14 @@ binary_count_expr ::= BINARYCOUNT
         indexTerceto++;
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "+",  "[" + (indexTerceto - 1) + "]", "[" + (indexTerceto - 2) + "]");
         indexTerceto++;
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "@contador + 1", "@contador");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "[" + (indexTerceto - 1) + "]", "@contador");
         indexTerceto++;
     }
 
     // Devolvemos el resultado
     action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "@contador", "@resultado");
+    indexTerceto++;
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "@resultado","", "");
     action_obj.manejador_Tercetos.agregarIndice("binary_count_expr", indexTerceto);
     mapaTiposTercetos.put(indexTerceto, "Int"); 
     indexTerceto++;
