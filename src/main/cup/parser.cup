@@ -55,6 +55,7 @@ import lyc.compiler.files.*;
 import java.util.Stack;
 import java_cup.runtime.*;
 import lyc.compiler.tabla_simbolos.*;
+import lyc.compiler.Assembler.*;
 import lyc.compiler.model.*;
 import java.util.Map;
 import java.util.HashMap;
@@ -92,8 +93,11 @@ action code
         case "BNE": return "BEQ";  // No igual -> Igual
         default: throw new RuntimeException("Operador no válido para inversión: " + operador);
     }
-    
 }
+    /**** Assembler ****/
+    public ManejadorAssembler manAsm = new ManejadorAssembler(manejadorTablaSimbolos.getTablaSimbolos(), manejador_Tercetos.getIntermediateCode());
+
+
 :}
 
 parser code
@@ -106,6 +110,9 @@ parser code
             return action_obj.manejador_Tercetos.getIntermediateCode();
     }
 
+    public ArrayList<String> getAsmInstructions() {
+        return action_obj.manAsm.getAsmInstructions();
+    }
 
 :}
 
@@ -177,6 +184,7 @@ start with program;
 program ::= sentence_list
 {: 
     System.out.println("Fin"); 
+    manAsm.generateAssembler();
 :}
 | 
 {: 
@@ -206,7 +214,7 @@ variable_names ::= variable_names COMMA name_init:type_spec
 
 name_init ::= IDENTIFIER:id
 {:
-    Simbolo symbol = new Simbolo(id.toString(), "", "", null);  // Longitud es 0 para variables sin valor asignado.
+    Simbolo symbol = new Simbolo(id.toString(), "", "", null);
     this.listaSimbolos.add(symbol);
     System.out.println("Se inicializó la variable: " + id.toString());
 :};
@@ -424,7 +432,7 @@ factor ::= INTEGER_CONSTANT:constant
 
 factor ::= STRING_CONSTANT:constant 
 {:
-    Simbolo symbol = new Simbolo("_" + constant.toString(), "CTE_STRING", constant.toString(), constant.toString().length());
+    Simbolo symbol = new Simbolo("_" + constant.toString().replace(" ", "_"), "CTE_STRING", constant.toString(), constant.toString().length());
     if (!action_obj.manejadorTablaSimbolos.containsSymbol(symbol.getNombre())) {
         action_obj.manejadorTablaSimbolos.addSymbol(symbol);
     }
@@ -473,7 +481,7 @@ condicional ::= OPEN_PAREN simple_condicion CLOSE_PAREN
 | OPEN_PAREN multiple_condicion CLOSE_PAREN
 {: System.out.println("Condicional múltiple"); :};
 
-simple_condicion ::= factor:f1 relational_op:r_op factor:f2
+simple_condicion ::= expression:f1 relational_op:r_op expression:f2
 {:
     
     int indiceFactor2 = tercetoStack.pop(); 
@@ -507,7 +515,7 @@ simple_condicion ::= factor:f1 relational_op:r_op factor:f2
     System.out.println("Bucle While" + indexTerceto);
 :};
 
-simple_condicion ::= NOT factor:f1 relational_op:r_op factor:f2
+simple_condicion ::= NOT expression:f1 relational_op:r_op expression:f2
 {:
     
     int indiceFactor2 = tercetoStack.pop(); 
@@ -620,6 +628,7 @@ condicional OPEN_BRACE sentence_list CLOSE_BRACE
     indexTerceto++;
 
 
+
 :};
 
 
@@ -638,14 +647,16 @@ sentence ::= WRITE OPEN_PAREN variable:id CLOSE_PAREN
     action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" , id.toString() ,"_"));
     indexTerceto++;
 :}
-| WRITE OPEN_PAREN STRING_CONSTANT:s CLOSE_PAREN
+| WRITE OPEN_PAREN STRING_CONSTANT:constant CLOSE_PAREN
 {:
-    System.out.println("Funcion Escribir");
+    System.out.println("Funcion Escribir String");
 
-    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, s.toString(), "_","_"));
-    indexTerceto++;
+    Simbolo symbol = new Simbolo("_" + constant.toString().replace(" ", "_").replace("\"", ""), "CTE_STRING", constant.toString(), constant.toString().length());
+    if (!action_obj.manejadorTablaSimbolos.containsSymbol(symbol.getNombre())) {
+        action_obj.manejadorTablaSimbolos.addSymbol(symbol);
+    }
 
-    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" , "[" +Integer.toString(indexTerceto -1) +"]" ,"_"));
+    action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto,"WRITE" , constant.toString().replace(" ", "_").replace("\"", "") ,"_"));
     indexTerceto++;
 :};
 
@@ -677,8 +688,10 @@ getPenultimatePosition_expr ::= GET_PENULTIMATE_POSITION
         indexTerceto++;
     } else {
         Simbolo elementoEnPivote = elementos.get(pivotValue - 1);
+        action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, elementoEnPivote.getValor(), "_", "_"));
+        indexTerceto++;
         mapaTiposTercetos.put(indexTerceto, elementoEnPivote.getTipoDato());
-        action_obj.manejador_Tercetos.agregarIndice("getPenultimatePosition_expr", (indexTercetoInicial+pivotValue-1));
+        action_obj.manejador_Tercetos.agregarIndice("getPenultimatePosition_expr", (indexTerceto));
     }
     
 
@@ -713,6 +726,12 @@ binary_count_expr ::= BINARYCOUNT
     action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "0", "@contador");
     indexTerceto++;
 
+    manejadorTablaSimbolos.addSymbol(new Simbolo("@digito", "Int", "", null));
+    manejadorTablaSimbolos.addSymbol(new Simbolo("@num", "Int", "", null));
+    manejadorTablaSimbolos.addSymbol(new Simbolo("@contador", "Int", "", null));
+    manejadorTablaSimbolos.addSymbol(new Simbolo("@resultado", "Int", "", null));
+
+
     // Desapilamos y procesamos cada elemento de la lista (que está en tercetoStack)
     int indexfinal=indexTerceto;
     for (int i =indexTercetoInicial; i<indexfinal -1 ; i++) {
@@ -723,7 +742,9 @@ binary_count_expr ::= BINARYCOUNT
         indexTerceto++;
 
         // Verificar si cada dígito del número es binario (0 o 1)
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "@num % 10", "@digito");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "%", "@num", "10");
+        indexTerceto++;
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "[" + (indexTerceto - 1) + "]", "@digito");
         indexTerceto++;
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@digito", "1");
         indexTerceto++;
@@ -738,18 +759,22 @@ binary_count_expr ::= BINARYCOUNT
         indexTerceto++;
 
         
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "[" + (indexTerceto + 12) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "[" + (indexTerceto + 17) + "]", "_");
         indexTerceto++;
 
         // Si es binario, seguimos iterando sobre los dígitos
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "@num / 10", "@num");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "/", "@num", "10");
+        indexTerceto++;
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=","[" + (indexTerceto - 1) + "]", "@num");
         indexTerceto++;
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@num", "0");
         indexTerceto++;
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 8) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BE", "[" + (indexTerceto + 9) + "]", "_");
         indexTerceto++;
         // Iteración para verificar todos los dígitos
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "@num % 10", "@digito");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "%", "@num", "10");
+        indexTerceto++;
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "[" + (indexTerceto - 1) + "]", "@digito");
         indexTerceto++;
         
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "@digito", "1");
@@ -768,10 +793,16 @@ binary_count_expr ::= BINARYCOUNT
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI", "[" + (indexTerceto + 3) + "]", "_");
         indexTerceto++;
 
-        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI","[" + (indexTerceto - 9) + "]", "_");
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "BI","[" + (indexTerceto - 11) + "]", "_");
         indexTerceto++;
 
         // Si es binario, incrementamos el contador
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "@contador", "_", "_");
+        indexTerceto++;
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "1", "_", "_");
+        indexTerceto++;
+        action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "+",  "[" + (indexTerceto - 1) + "]", "[" + (indexTerceto - 2) + "]");
+        indexTerceto++;
         action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "@contador + 1", "@contador");
         indexTerceto++;
     }

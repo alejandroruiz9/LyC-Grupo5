@@ -13,10 +13,10 @@ public class Manejador_Tabla_Simbolos {
         tablaSimbolos.add(symbol);
     }
 
-    public void addVariablesFromArrayList(ArrayList<Simbolo> simbolosAAñadir, String tipoDato) {
+    public void addVariablesFromArrayList(ArrayList<Simbolo> simbolos, String tipoDato) {
 
 
-        for (Simbolo elemento : simbolosAAñadir) {
+        for (Simbolo elemento : simbolos) {
             try {
                 if (!tablaSimbolos.contains(elemento)){
                     elemento.setTipoDato(tipoDato);
@@ -27,7 +27,6 @@ public class Manejador_Tabla_Simbolos {
                 System.out.println("Error al procesar el símbolo: " + e.getMessage());
             }
         }
-
     }
 
     public ArrayList<Simbolo> getTablaSimbolos() {
@@ -52,6 +51,24 @@ public class Manejador_Tabla_Simbolos {
         }
         return null;
     }
+
+    public static Simbolo getSymbolStatic(String nombreSimbolo, ArrayList<Simbolo> tablaSimbolos) {
+        for (Simbolo symbol : tablaSimbolos) {
+            if (symbol.getNombre().equals(nombreSimbolo)) {
+                return symbol;
+            }
+        }
+        return null;
+    }
+    public static String getSymbolTypeStatic(String nombreSimbolo, ArrayList<Simbolo> tablaSimbolos) {
+        for (Simbolo symbol : tablaSimbolos) {
+            if (symbol.getNombre().equals(nombreSimbolo)) {
+                return symbol.getTipoDato();
+            }
+        }
+        return "null";
+    }
+
 
     
     public void removeSymbol(String nombreSimbolo) {
