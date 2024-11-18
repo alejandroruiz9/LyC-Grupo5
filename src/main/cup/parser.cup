@@ -299,6 +299,7 @@ expression ::= expression:e1 PLUS term:e2
         throw new RuntimeException("Type mismatch: No se puede sumar " + tipoE1 + " con " + tipoE2);
     }
     action_obj.manejador_Tercetos.agregarIndice("expression", indexTerceto);
+
     indexTerceto++;
     RESULT = new Simbolo("", tipoE1, "", null);
 :}
@@ -318,7 +319,8 @@ expression ::= expression:e1 PLUS term:e2
     } else {
         throw new RuntimeException("Type mismatch: No se puede restar " + tipoE1 + " con " + tipoE2);
     }
-    action_obj.manejador_Tercetos.agregarIndice("expression", indexTerceto);    
+    action_obj.manejador_Tercetos.agregarIndice("expression", indexTerceto);   
+
     indexTerceto++;
     RESULT = new Simbolo("", tipoE1, "", null);
 :}
@@ -333,7 +335,7 @@ expression ::= expression:e1 PLUS term:e2
 | getPenultimatePosition_expr:e 
 {:
     action_obj.manejador_Tercetos.apuntarAOtroIndice("expression", "getPenultimatePosition_expr");
-    
+
     RESULT = e;
 :}
 | binary_count_expr:e 
@@ -403,7 +405,6 @@ factor ::= IDENTIFIER:id
     
     // Asignar tipo al terceto
     mapaTiposTercetos.put(indexTerceto, symbol.getTipoDato());
-    tercetoStack.push(indexTerceto);
     indexTerceto++;
     RESULT = symbol;
 :};
@@ -419,7 +420,7 @@ factor ::= FLOAT_CONSTANT:constant
     action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, constant.toString(), "_", "_"));
     action_obj.manejador_Tercetos.agregarIndice("factor", indexTerceto);
     mapaTiposTercetos.put(indexTerceto, "Float"); 
-    tercetoStack.push(indexTerceto);
+    
     indexTerceto++;
     RESULT = symbol;
 :};
@@ -435,7 +436,7 @@ factor ::= INTEGER_CONSTANT:constant
     action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, constant.toString(), "_", "_"));
     action_obj.manejador_Tercetos.agregarIndice("factor", indexTerceto);
     mapaTiposTercetos.put(indexTerceto, "Int");
-    tercetoStack.push(indexTerceto);
+    
     indexTerceto++;
     RESULT = symbol;
 :};
@@ -464,7 +465,7 @@ factor ::= STRING_CONSTANT:constant
     action_obj.manejador_Tercetos.agregarTerceto(new Tercetos(indexTerceto, nombreConstante, "_", "_"));
     action_obj.manejador_Tercetos.agregarIndice("factor", indexTerceto);
     mapaTiposTercetos.put(indexTerceto, "String");
-    tercetoStack.push(indexTerceto);
+    
     indexTerceto++;
 
     RESULT = symbol;
@@ -506,14 +507,14 @@ condicional ::= OPEN_PAREN simple_condicion CLOSE_PAREN
 | OPEN_PAREN multiple_condicion CLOSE_PAREN
 {: System.out.println("Condicional múltiple"); :};
 
-simple_condicion ::= expression:f1 relational_op:r_op expression:f2
+simple_condicion ::= expression:f1 {:tercetoStack.push(indexTerceto - 1);:} relational_op:r_op expression:f2
 {:
     
-    int indiceFactor2 = tercetoStack.pop(); 
-    int indiceFactor1 = tercetoStack.pop(); 
+    int indiceExpr2 = indexTerceto -1; 
+    int indiceExpr1 = tercetoStack.pop(); 
 
-    String tipoFactor1 = mapaTiposTercetos.get(indiceFactor1);
-    String tipoFactor2 = mapaTiposTercetos.get(indiceFactor2);
+    String tipoFactor1 = mapaTiposTercetos.get(indiceExpr1);
+    String tipoFactor2 = mapaTiposTercetos.get(indiceExpr2);
 
     // Verificar si los tipos de datos son compatibles
     if (tipoFactor1 == null || tipoFactor2 == null) {
@@ -528,7 +529,7 @@ simple_condicion ::= expression:f1 relational_op:r_op expression:f2
 
     
     int indiceComparacion = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
-    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "[" + indiceFactor1 + "]", "[" + indiceFactor2 + "]");
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "[" + indiceExpr1 + "]", "[" + indiceExpr2 + "]");
     mapaTiposTercetos.put(indiceComparacion, "bool");
     indexTerceto++;
 
@@ -540,14 +541,14 @@ simple_condicion ::= expression:f1 relational_op:r_op expression:f2
     System.out.println("Bucle While" + indexTerceto);
 :};
 
-simple_condicion ::= NOT expression:f1 relational_op:r_op expression:f2
+simple_condicion ::= NOT expression:f1 {:tercetoStack.push(indexTerceto - 1);:} relational_op:r_op expression:f2
 {:
     
-    int indiceFactor2 = tercetoStack.pop(); 
-    int indiceFactor1 = tercetoStack.pop(); 
+    int indiceExpr2 = indexTerceto -1; 
+    int indiceExpr1 = tercetoStack.pop(); 
 
-    String tipoFactor1 = mapaTiposTercetos.get(indiceFactor1);
-    String tipoFactor2 = mapaTiposTercetos.get(indiceFactor2);
+    String tipoFactor1 = mapaTiposTercetos.get(indiceExpr1);
+    String tipoFactor2 = mapaTiposTercetos.get(indiceExpr2);
 
     // Verificar si los tipos de datos son compatibles
     if (tipoFactor1 == null || tipoFactor2 == null) {
@@ -562,7 +563,7 @@ simple_condicion ::= NOT expression:f1 relational_op:r_op expression:f2
 
     
     int indiceComparacion = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
-    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "[" + indiceFactor1 + "]", "[" + indiceFactor2 + "]");
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "CMP", "[" + indiceExpr1 + "]", "[" + indiceExpr2 + "]");
     mapaTiposTercetos.put(indiceComparacion, "bool");
     indexTerceto++;
 
@@ -776,6 +777,7 @@ param_list ::= param_list:pl COMMA factor:f
     List<Simbolo> lista = (List<Simbolo>)pl;
     lista.add((Simbolo)f); 
     RESULT = lista;
+    tercetoStack.push(indexTerceto - 1);
     System.out.println("Añadido factor a la lista de parámetros: " + ((Simbolo)f).getValor());
 :}
 | factor:f
@@ -784,6 +786,7 @@ param_list ::= param_list:pl COMMA factor:f
     List<Simbolo> lista = new ArrayList<>();
     lista.add((Simbolo)f); 
     RESULT = lista;
+    tercetoStack.push(indexTerceto - 1);
     System.out.println("Factor inicial en la lista de parámetros: " + ((Simbolo)f).getValor());
 :};
 
