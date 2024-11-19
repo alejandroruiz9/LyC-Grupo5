@@ -57,6 +57,7 @@ import java_cup.runtime.*;
 import lyc.compiler.tabla_simbolos.*;
 import lyc.compiler.Assembler.*;
 import lyc.compiler.model.*;
+import lyc.compiler.tabla_sintesis.*;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -71,6 +72,13 @@ action code
     // HashMap para asociar constantes String con nombres únicos
     HashMap<String, String> mapaConstantesString = new HashMap<>();
     int contadorString = 1;
+
+
+
+    /*Tabla de sintesis*/
+
+
+    tabla_sintesis tablaSintesis = new tabla_sintesis(); // Crear una nueva instancia si no es estática
 
 
     /**** Tercetos ****/
@@ -117,6 +125,7 @@ parser code
     public ArrayList<String> getAsmInstructions() {
         return action_obj.manAsm.getAsmInstructions();
     }
+    
 
 :}
 
@@ -251,36 +260,45 @@ type ::= FLOAT
 
 /******** TEMAS COMUNES: Asignaciones  ********/
 sentence ::= {: System.out.println("Inicio de sentencia"); :} assignment {: System.out.println("Fin de sentencia"); :};
-assignment ::= IDENTIFIER:id ASSIG expression:e  
+assignment ::= IDENTIFIER:id ASSIG expression:e 
 {:
     System.out.println("Asignación a variable: " + id);
 
-
-    int indice = action_obj.manejador_Tercetos.getIntermediateCode().size() + 1;
-    action_obj.manejador_Tercetos.crearNuevoTerceto(indice, ":=", "[" + action_obj.manejador_Tercetos.obtenerIndice("expression") + "]", id.toString());
-    
     Simbolo existingSymbol = action_obj.manejadorTablaSimbolos.getSymbol(id.toString());
-    
     if (existingSymbol == null) {
         throw new RuntimeException("La variable '" + id + "' no está definida.");
     }
 
-    // Obtener el tipo de la variable desde la tabla de símbolos (lado izquierdo)
-    String tipoVariable = existingSymbol.getTipoDato();
-    
-    // Obtener el tipo de la expresión desde el mapa de tipos de tercetos (lado derecho)
+    // Aca obtenemos el tipo de dato de la variable y la expresión 
+    String tipoVariable = existingSymbol.getTipoDato(); 
     int indiceExpresion = action_obj.manejador_Tercetos.obtenerIndice("expression");
-    String tipoExpresion = mapaTiposTercetos.get(indiceExpresion);
+    String tipoExpresion = mapaTiposTercetos.get(indiceExpresion); 
 
-    // Validar que el tipo de la expresión sea compatible con el tipo de la variable
-    if (!tipoVariable.equals(tipoExpresion)) {
-        throw new RuntimeException("Type mismatch: No se puede asignar " + tipoExpresion + " a " + tipoVariable);
+    // Verificamos si la asignación es válida
+    System.out.println(tipoExpresion);
+    System.out.println(tipoVariable);
+    if (!tablaSintesis.canOperate(tipoExpresion, tipoVariable)) {
+        throw new RuntimeException("Asignación inválida: no se puede asignar " + tipoExpresion + " a " + tipoVariable);
     }
-    indexTerceto++;
-    // Asignar el tipo de la variable al terceto de asignación
-    mapaTiposTercetos.put(indice, tipoVariable);
 
-    RESULT = id;
+    // Realizar el cambio del tipo de dato en el mapa si es necesario
+    if (!tipoVariable.equals(tipoExpresion)) {
+        System.out.println("Realizando conversión implícita de " + tipoExpresion + " a " + tipoVariable);
+
+        // Actualizar el tipo de dato en el mapa para reflejar el cambio implícito
+        mapaTiposTercetos.put(indiceExpresion, tipoVariable);
+        if(tipoVariable == "Int"){
+             action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, "TRUNC", "[" + indiceExpresion + "]", "_");
+             indexTerceto++;
+        }
+    }
+
+    // Generar el terceto de asignación
+    action_obj.manejador_Tercetos.crearNuevoTerceto(indexTerceto, ":=", "[" + indiceExpresion + "]", id.toString());
+    mapaTiposTercetos.put(indexTerceto, tipoVariable); // Asignar el tipo de la variable destino al nuevo terceto
+    indexTerceto++;
+
+    System.out.println("Asignación válida de " + tipoExpresion + " a " + tipoVariable);
 :};
 expression ::= expression:e1 PLUS term:e2 
 {:
@@ -312,13 +330,25 @@ expression ::= expression:e1 PLUS term:e2
     // Validar los tipos de los operandos
     String tipoE1 = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("expression"));
     String tipoE2 = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("term"));
-    
+    if (!tablaSintesis.canOperate(tipoE1, tipoE2)) {
+        throw new RuntimeException("Operacion inválida: no se puede restar " + tipoE1 + " a " + tipoE2);
+    }
     if (tipoE1.equals(tipoE2)) {
         // Asignar tipo al terceto de resta
         mapaTiposTercetos.put(indexTerceto, tipoE1);
     } else {
-        throw new RuntimeException("Type mismatch: No se puede restar " + tipoE1 + " con " + tipoE2);
+        if(tipoE2=="Float"){
+            System.out.println("Realizando conversión implícita de " + tipoE1 + " a " + tipoE2);
+            mapaTiposTercetos.put(indexTerceto, tipoE2);}
+        else{
+            System.out.println("Realizando conversión implícita de " + tipoE2 + " a " + tipoE1);
+            mapaTiposTercetos.put(indexTerceto, tipoE1);
+            }
     }
+
+    
+
+    mapaTiposTercetos.put(indexTerceto, tipoE1);
     action_obj.manejador_Tercetos.agregarIndice("expression", indexTerceto);   
 
     indexTerceto++;
@@ -355,11 +385,20 @@ term ::= term:t MULT factor:f
     String tipoT = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("term"));
     String tipoF = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("factor"));
     
+    if (!tablaSintesis.canOperate(tipoT, tipoF)) {
+        throw new RuntimeException("Operacion inválida: no se puede multiplicar " + tipoT + " a " + tipoF);
+    }
     if (tipoT.equals(tipoF)) {
-        // Asignar tipo al terceto de multiplicación
+        // Asignar tipo al terceto de resta
         mapaTiposTercetos.put(indexTerceto, tipoT);
     } else {
-        throw new RuntimeException("Type mismatch: No se puede multiplicar " + tipoT + " con " + tipoF);
+        if(tipoT=="Float"){
+            System.out.println("Realizando conversión implícita de " + tipoF + " a " + tipoT);
+            mapaTiposTercetos.put(indexTerceto, tipoT);}
+        else{
+            System.out.println("Realizando conversión implícita de " + tipoT + " a " + tipoF);
+            mapaTiposTercetos.put(indexTerceto, tipoF);
+            }
     }
     action_obj.manejador_Tercetos.agregarIndice("term", indexTerceto);
     indexTerceto++;
@@ -374,11 +413,20 @@ term ::= term:t MULT factor:f
     String tipoT = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("term"));
     String tipoF = mapaTiposTercetos.get(action_obj.manejador_Tercetos.obtenerIndice("factor"));
     
+    if (!tablaSintesis.canOperate(tipoT, tipoF)) {
+        throw new RuntimeException("Operacion inválida: no se puede dividir " + tipoT + " a " + tipoF);
+    }
     if (tipoT.equals(tipoF)) {
-        // Asignar tipo al terceto de división
+        // Asignar tipo al terceto de resta
         mapaTiposTercetos.put(indexTerceto, tipoT);
     } else {
-        throw new RuntimeException("Type mismatch: No se puede dividir " + tipoT + " con " + tipoF);
+        if(tipoT=="Float"){
+            System.out.println("Realizando conversión implícita de " + tipoF + " a " + tipoT);
+            mapaTiposTercetos.put(indexTerceto, tipoT);}
+        else{
+            System.out.println("Realizando conversión implícita de " + tipoT + " a " + tipoF);
+            mapaTiposTercetos.put(indexTerceto, tipoF);
+            }
     }
     action_obj.manejador_Tercetos.agregarIndice("term", indexTerceto);
     indexTerceto++;

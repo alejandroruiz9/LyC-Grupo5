@@ -146,6 +146,7 @@ public class ManejadorAssembler {
         asmInstructions.add("fldcw truncMode");
         asmInstructions.add("");
         int tercetoIndex = 1;
+        boolean flagTRUNC = false;
         for (Tercetos terceto : tercetos) {
             try {
                 String destino = tercetoLabels.get(terceto.getIndice());
@@ -187,7 +188,7 @@ public class ManejadorAssembler {
                         }
                         else{ 
                             int indiceTarget= Integer.parseInt(operando1.replace("[", "").replace("]", ""));
-                            if(terceto.getIndice()- indiceTarget > 1){
+                            if(terceto.getIndice()- indiceTarget > 1 && flagTRUNC==false){
                                 if (tercetos.get(indiceTarget -1 ).getOperador().matches("[0-9]+(\\.[0-9]+)?")) {
                                     asmInstructions.add("\tFLD _" + tercetos.get(indiceTarget -1 ).getOperador().replace(".", "x"));
                                 } else if(!terceto.getOperador().contains("\"") && !terceto.getOperador().contains(".")){
@@ -197,7 +198,7 @@ public class ManejadorAssembler {
                             }
                             
                         }
-                        
+                        flagTRUNC=false;
                         asmInstructions.add("\tFSTP " + operando2);
                         asmInstructions.add("");
                         break;
@@ -393,6 +394,10 @@ public class ManejadorAssembler {
                             asmInstructions.add("\tmov dx, OFFSET saltoLinea ");
                             asmInstructions.add("\tmov ah, 9 ");
                             asmInstructions.add("\tint 21h ");
+                    break;
+                    case "TRUNC":
+                            asmInstructions.add("\tFRNDINT");
+                            flagTRUNC=true;
                     break;
                     // Otros operadores
                     default:
