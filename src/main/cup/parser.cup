@@ -99,7 +99,7 @@ action code
     }
 }
     /**** Assembler ****/
-    public ManejadorAssembler manAsm = new ManejadorAssembler(manejadorTablaSimbolos.getTablaSimbolos(), manejador_Tercetos.getIntermediateCode(),mapaConstantesString);
+    public ManejadorAssembler manAsm = new ManejadorAssembler(manejadorTablaSimbolos.getTablaSimbolos(), manejador_Tercetos.getIntermediateCode());
 
 
 :}

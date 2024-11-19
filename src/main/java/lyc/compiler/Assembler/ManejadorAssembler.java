@@ -18,7 +18,6 @@ public class ManejadorAssembler {
     private HashMap<Integer, String> tercetoLabels;
 
 
-
     public ManejadorAssembler(ArrayList<Simbolo> tabla_simbolos, ArrayList<Tercetos> tercetos) {
         this.tabla_simbolos = tabla_simbolos;
         this.tercetos = tercetos;
@@ -88,9 +87,7 @@ public class ManejadorAssembler {
                     asmInstructions.add("\t" + symbol.getNombre() + "\t\tdd ?" );
                 } else { // es una cte
                     if(symbol.getTipoDato().equals("String")) { // el nombre del string no puede tener " "
-                        String nombre_string = symbol.getNombre().replace("\"", "");
-                        nombre_string = nombre_string.replace(' ', '_');
-                        asmInstructions.add("\t" + nombre_string + "\t\tdb\t\t" + symbol.getValor() +", '$'");
+                        asmInstructions.add("\t" + symbol.getNombre() + "\t\tdb\t\t" + symbol.getValor() +", '$'");
                     }
                     else if(symbol.getTipoDato().equals("Int")){
                         asmInstructions.add("\t" + symbol.getNombre() + "\t\tdd\t\t" + symbol.getValor()+ ".0");
@@ -167,11 +164,7 @@ public class ManejadorAssembler {
                     valor = "_" + valor;
                     operador = valor;
                 }
-                if(operador.contains("\"")) { // el nombre del string no puede tener " "
-                        String nombre_string = operador.replace("\"", "");
-                        nombre_string = nombre_string.replace(' ', '_');
-                        operador = "_" + nombre_string;
-                }
+
                 String operando2 = terceto.getOperando2();
 
                 // Si el terceto destino tiene una etiqueta, la agregamos en el asm
@@ -383,18 +376,18 @@ public class ManejadorAssembler {
 
                         break;
                     case "WRITELN":
-                        if(Manejador_Tabla_Simbolos.getSymbolTypeStatic("_"+operando1, tabla_simbolos)== "String")
-                            asmInstructions.add("\tDisplayString " + "_"+operando1);
-                        else if (Manejador_Tabla_Simbolos.getSymbolTypeStatic(operando1, tabla_simbolos)== "String")
-                            asmInstructions.add("\tDisplayString "+operando1);
-                        else if(Manejador_Tabla_Simbolos.getSymbolTypeStatic("_"+operando1, tabla_simbolos)== "Float" ||
-                        Manejador_Tabla_Simbolos.getSymbolTypeStatic("_"+operando1, tabla_simbolos)== "Int" )
-                            asmInstructions.add("\tDisplayFloat _" + operando1+ ",2");
-                        else
-                            asmInstructions.add("\tDisplayFloat " + operando1+ ",2");
-                        asmInstructions.add("\tmov dx, OFFSET saltoLinea ");
-                        asmInstructions.add("\tmov ah, 9 ");
-                        asmInstructions.add("\tint 21h ");
+                            if(Manejador_Tabla_Simbolos.getSymbolTypeStatic("_"+operando1, tabla_simbolos)== "String")
+                                asmInstructions.add("\tDisplayString " + "_"+operando1);
+                            else if (Manejador_Tabla_Simbolos.getSymbolTypeStatic(operando1, tabla_simbolos)== "String")
+                                asmInstructions.add("\tDisplayString "+operando1);
+                            else if(Manejador_Tabla_Simbolos.getSymbolTypeStatic("_"+operando1, tabla_simbolos)== "Float" ||
+                            Manejador_Tabla_Simbolos.getSymbolTypeStatic("_"+operando1, tabla_simbolos)== "Int" )
+                                asmInstructions.add("\tDisplayFloat _" + operando1+ ",2");
+                            else
+                                asmInstructions.add("\tDisplayFloat " + operando1+ ",2");
+                            asmInstructions.add("\tmov dx, OFFSET saltoLinea ");
+                            asmInstructions.add("\tmov ah, 9 ");
+                            asmInstructions.add("\tint 21h ");
                     break;
                     // Otros operadores
                     default:
@@ -419,40 +412,7 @@ public class ManejadorAssembler {
 
     }
 
-    public String getSymbolType(String symbolName) {
-        for (Simbolo symbol : tabla_simbolos) {
-            if (symbol.getNombre().equals(symbolName)) {
-                return "Variable";
-            }
-        }
-        for (Simbolo symbol : tabla_simbolos) {
-            if (symbol.getNombre().equals("_" + symbolName)) {
-                return "Constante";
-            }
-        }
- 
-        return "No encontrado";
-    }
-    public String tipoDeSimboloPorNombre(String nombre) {
-        for (Simbolo symbol : tabla_simbolos) {
-            if (symbol.getNombre().equals(nombre)) {
-                return symbol.getTipoDato();
-            } else if (symbol.getNombre().equals("_" + nombre)) {
-                return symbol.getTipoDato();
-            }
-        }
-        return null; // Si no se encuentra el símbolo
-    }
-    // Busca el tipo de un símbolo reconstruyendo su nombre original
-    public boolean buscarTipoString(String ladoDerecho) {
-        String nombreOriginal = "\"" + ladoDerecho.substring(1).replace('_', ' ') + "\"";
-        for (Simbolo symbol : tabla_simbolos) {
-            if (symbol.getNombre().equals(nombreOriginal) && symbol.getTipoDato().equals("String")) {
-                return true;
-            }
-        }
-        return false;
-    }
+
     public ArrayList<String> getAsmInstructions() {
         return asmInstructions;
     }
