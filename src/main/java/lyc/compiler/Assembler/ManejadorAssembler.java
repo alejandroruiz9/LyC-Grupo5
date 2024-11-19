@@ -33,6 +33,8 @@ public class ManejadorAssembler {
     }
 
     private void filterBranchLabels() {
+        //Funcion para buscar cuales son los tercetos a los que se le hace un salto, para luego poder identificarlos. Ejemplo: [5] (BI,[10],). 
+        //Guardamos el 10 dentro de una lista para luego cuando procesemos ese terceto imprimir una etiqueta que nos permitira saltar a este.
         HashMap<Integer, String> branchLabels = new HashMap<>();
         for (int i = 0; i < tercetos.size(); i++) {
             Tercetos terceto = tercetos.get(i);
@@ -112,6 +114,7 @@ public class ManejadorAssembler {
         Stack<String> operandos  = new Stack<String>();
         asmInstructions.add(".CODE");
         if(Manejador_Tabla_Simbolos.getSymbolTypeStatic("@remainder", tabla_simbolos)!="null"){
+            //Funcion de modulo en assembler que tuvimos que agregar para poder sacar el residuo de la division por 10 y asi implementar la funcion de binaryCount
             asmInstructions.add("MODULO PROC");             
             asmInstructions.add("\tFSTP @divisor");             
             asmInstructions.add("\tFSTP @remainder");             
@@ -171,6 +174,8 @@ public class ManejadorAssembler {
                 if (tercetoLabels.containsKey(tercetoIndex)) {
                     asmInstructions.add(tercetoLabels.get(tercetoIndex) + ":");
                 }
+
+                //En este apartado comienza toda la traduccion de los tercetos a codigo assembler
                 switch (operador) {
                     case ":=":
                         
