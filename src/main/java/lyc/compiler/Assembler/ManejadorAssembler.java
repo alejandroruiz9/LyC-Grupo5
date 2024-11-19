@@ -16,15 +16,14 @@ public class ManejadorAssembler {
     private ArrayList<Simbolo> tabla_simbolos;
     private ArrayList<Tercetos> tercetos;
     private HashMap<Integer, String> tercetoLabels;
-    private HashMap<String, String> mapaConstantesString; // Agregado para manejar las constantes String
 
 
-    public ManejadorAssembler(ArrayList<Simbolo> tabla_simbolos, ArrayList<Tercetos> tercetos, HashMap<String, String> mapaConstantesString) {
+
+    public ManejadorAssembler(ArrayList<Simbolo> tabla_simbolos, ArrayList<Tercetos> tercetos) {
         this.tabla_simbolos = tabla_simbolos;
         this.tercetos = tercetos;
         this.asmInstructions = new ArrayList<>();
         this.tercetoLabels = new HashMap<>();
-        this.mapaConstantesString = mapaConstantesString;
     }
 
 
